@@ -13,3 +13,42 @@ TODO:
 3. training
 4. implement self-play
 5. self-play training
+6. playing against the agent
+
+
+
+
+
+Action: offer sell, offer buy.  With an amount + a price
+
+observation_space: public pile + own hand + money+ transection history + contract each player has
+none of the Stable Baselines can handle Dict/Tuple spaces. Concatenate them into Box space.
+
+reward: expected profit * timestep
+=  (expected value of public pile * amount of contract + balance – initial balance ) * timestep
+times timestep to incentive late game profits more than in the beginning
+
+Start with 1 suit, 1 contract, 1 sequence per round, 2 agents
+
+
+Training: play against baseline model; self-play 
+
+Training against baseline models is easier to start with. But the performance might not be very good
+
+Self-play: 
+1. To avoid “strategy collapse”, the agent trains 80% of its games against itself and the other 20% against its past selves.
+2. To force exploration in strategy space, during training (and only during training) we may randomize the properties of the units.
+
+
+User testing: we can play against the agent (see https://github.com/openai/gym/blob/master/gym/utils/play.py#L26
+
+
+
+
+package versions:
+Python 3.6.13
+numpy                1.19.5
+gym                  0.18.0
+stable-baselines     2.10.1
+tensorflow           1.15.0
+(warning: stable baseline works with tensorflow 1.x)
