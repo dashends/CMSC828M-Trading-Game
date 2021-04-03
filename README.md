@@ -7,6 +7,7 @@ TODO:
 0. change 13 cards to a parameter to constructor
 0. randomize turn sequence, change at end of each day
 0. add more sequencies per round
+0. [1,1,100,10] should post two offers. also disallow self trading (Da)
 1. test the environment (testing starter code in main.py)
 	a. obs correct?
 	b. actions correct?
@@ -34,10 +35,6 @@ none of the Stable Baselines can handle Dict/Tuple spaces. Concatenate them into
 reward: expected profit * timestep
 =  (expected value of public pile * amount of contract + cureent balance – initial balance) * timestep
 times timestep to incentive late game profits more than in the beginning
-
-= 9+5 + 
-
-91-9-5- 3- 4 =
 
 
 Start with 1 suit, 1 contract, 1 sequence per round, 2 agents

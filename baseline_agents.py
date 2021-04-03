@@ -19,6 +19,3 @@ class BaselineAgent2():
 	
 	def predict(self, obs):
 		return [1,1,100,10] # buy at 100, sell at 10
-		
-		
-		
