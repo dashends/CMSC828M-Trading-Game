@@ -22,7 +22,8 @@ class TradingGameEnv(gym.Env):
 		self.number_of_sub_piles = number_of_sub_piles
 		self.other_agents = other_agent_list
 		
-		# Actions: buy (1=true), sell, price for buy, price for buy
+		# Actions: buy (1=true), sell, price for buy, price for sell
+		# action: [1, 0, 23, 25]
 		self.action_space =  spaces.MultiDiscrete([2, 2, SUIT_SUM, SUIT_SUM])
 		
 		# 2-6 player, about 6 cards are reserved for the public pile
@@ -35,19 +36,14 @@ class TradingGameEnv(gym.Env):
 		self.public_sub_pile_cards_count = math.ceil((13 - self.public_cards_count)/self.number_of_sub_piles)
 		
 		# observation: revealed public pile + own hand  + balance + contract
-		"""
-		dict_space = {
-			'public_pile': spaces.Box(low=0, high=13, shape=(4, self.public_sub_pile_cards_count), dtype=np.int),
-			'own_hand': spaces.Box(low=0, high=13, shape=(self.player_hand_count,), dtype=np.int)
-			#'balance': spaces.Box(low=-np.inf, high=np.inf, shape=(self.player_count,), dtype=np.float32),
-			#'contract': spaces.Box(low=-np.inf, high=np.inf, shape=(self.player_count,), dtype=np.float32)
-		}
-		self.observation_space = spaces.Dict(dict_space)
-		"""
+
 		# first public_cards_count cards are public pile
 		# then self.player_hand_count is own_hand
+		# [public pile + own hand]
+		# 6 cards for public pile, 3 cards in own hand
+		# [1, 5, 0, 0, 0, 0, 2, 11, 12]
 		self.obs_element_count = self.public_cards_count + self.player_hand_count
-		lower = np.zeros(self.obs_element_count, dtype=np.int)
+		lower = np.zeros(self.obs_element_count, dtype=np.int) #[0 0 0 0 0]
 		upper = np.full(self.obs_element_count, 13, dtype=np.int)
 		self.observation_space = spaces.Box(lower , upper, dtype=np.int)
 
@@ -55,7 +51,7 @@ class TradingGameEnv(gym.Env):
 	def reset(self):
 		# Reset the state of the environment to an initial state
 		# the agent is place at AGENT_INDEX = 0 row
-		self.balance = np.full(self.player_count, INITIAL_ACCOUNT_BALANCE, dtype=np.int)
+		self.balance = np.full(self.player_count, INITIAL_ACCOUNT_BALANCE, dtype=np.int) #[agent, other_agent1, other_agent2, ....]
 		self.contract = np.zeros(self.player_count, dtype=np.int)
 		self.time_step = 1
 		self.total_reward = 0
@@ -65,7 +61,7 @@ class TradingGameEnv(gym.Env):
 		np.random.shuffle(suit_list)
 
 		self.hands = suit_list[0:self.player_count * self.player_hand_count].reshape((self.player_count, self.player_hand_count))
-		
+
 		
 		self.public_pile = suit_list[self.player_count * self.player_hand_count:]
 		
@@ -77,7 +73,7 @@ class TradingGameEnv(gym.Env):
 		return self._next_observation()
   
 	def step(self, action):
-		# let other baseline agents to take actions
+		# let other baseline agents to take actions first
 		if len(self.other_agents) == self.player_count-1:
 			for i in range(self.player_count-1):
 				obs_i = self._next_observation(i+1)
@@ -108,9 +104,8 @@ class TradingGameEnv(gym.Env):
 							self.balance[AGENT_INDEX] - INITIAL_ACCOUNT_BALANCE)
 		reward *= self.time_step
 		
-		
+
 		# if it's the last day, give final reward
-		# 
 		if self.time_step == self.number_of_sub_piles-1:
 			reward += ((self.public_pile.sum() * self.contract[AGENT_INDEX] + 
 							self.balance[AGENT_INDEX] - INITIAL_ACCOUNT_BALANCE)*
@@ -140,6 +135,7 @@ class TradingGameEnv(gym.Env):
 		# own hand
 		obs[self.public_cards_count:] = self.hands[agent_index, :]
 		
+		# return [1, 5, 0, 0, 0, 0, 2, 11, 12]
 		return obs
 		
 	def _take_action(self, action, agent):
