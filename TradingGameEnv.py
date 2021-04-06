@@ -61,7 +61,7 @@ class TradingGameEnv(gym.Env):
 		# the agent is place at AGENT_INDEX = 0 row
 		self.balance = np.full(self.player_count, INITIAL_ACCOUNT_BALANCE, dtype=np.int) #[agent, other_agent1, other_agent2, ....]
 		self.contract = np.zeros(self.player_count, dtype=np.int)
-		self.time_step = 1
+		self.sequence_counter = 1
 		self.day = 1
 		self.total_reward = 0
 		if self.random_seq:
@@ -120,7 +120,7 @@ class TradingGameEnv(gym.Env):
 		reward *= self.day
 	
 		# if it's the last day, give final reward
-		if self.day == self.number_of_sub_piles-1 and self.time_step == self.seq_per_day:
+		if self.day == self.number_of_sub_piles-1 and self.sequence_counter == self.seq_per_day:
 			final_reward = ((self.public_pile.sum() * self.contract[AGENT_INDEX] + 
 							self.balance[AGENT_INDEX] - INITIAL_ACCOUNT_BALANCE)*
 							(self.day + 1))
@@ -129,11 +129,11 @@ class TradingGameEnv(gym.Env):
 		self.total_reward += reward
 		
 		# if it is the last sequence of that day, go to next day
-		if self.time_step == self.seq_per_day:
+		if self.sequence_counter == self.seq_per_day:
 			self.day += 1
 			
 			#reset sequence number
-			self.time_step = 1
+			self.sequence_counter = 1
 			
 			# clear the offers for the day
 			with self.sell_offer.mutex:
@@ -145,7 +145,7 @@ class TradingGameEnv(gym.Env):
 			if self.random_seq:
 				np.random.shuffle(self.turn_sequence)
 		else:
-			self.time_step += 1
+			self.sequence_counter += 1
 
 		done = self.day > self.number_of_sub_piles-1
 		obs = self._next_observation()
@@ -255,10 +255,10 @@ class TradingGameEnv(gym.Env):
 		# Render the environment to the screen
 		if self.day == self.number_of_sub_piles:
 			print("\n\n====================== End Game ======================")
-		elif self.time_step == 1:
+		elif self.sequence_counter == 1:
 			print("\n\n====================== Beginning of day ", self.day, " ======================")
 		else:
-			print("=================== Before sequence ", self.time_step, " ===================")
+			print("=================== Before sequence ", self.sequence_counter, " ===================")
 		
 		print("balances: ", self.balance) #[our_agent, opponent1, opponent2, ...]
 		print("contracts: ", self.contract)
