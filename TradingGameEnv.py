@@ -7,7 +7,6 @@ import math
 from queue import PriorityQueue
  
 INITIAL_ACCOUNT_BALANCE = 10000
-SUIT_SUM = (1+13)*13/2
 AGENT_INDEX = 0
 	
 class TradingGameEnv(gym.Env):
@@ -15,25 +14,32 @@ class TradingGameEnv(gym.Env):
 	metadata = {'render.modes': ['human']}
 
 	
-	def __init__(self, player_count = 2, suit_count = 1, number_of_sub_piles = 4, other_agent_list = []):
+	def __init__(self, player_count = 2, suit_count = 1, number_of_sub_piles = 4, other_agent_list = [], seq_per_day = 1, random_seq = False, cards_per_suit = 13):
 		super(TradingGameEnv, self).__init__()
 		self.player_count = player_count
 		self.suit_count = suit_count
 		self.number_of_sub_piles = number_of_sub_piles
 		self.other_agents = other_agent_list
+		self.random_seq = random_seq
+		self.cards_per_suit = cards_per_suit
+		self.seq_per_day = seq_per_day
+		self.SUIT_SUM = (1+cards_per_suit)*cards_per_suit/2
 		
+		if len(self.other_agents) != self.player_count-1:
+			print("Error: other_agent_list do not conform to the number of players. You may need to add/remove some other agents")
+			
 		# Actions: buy (1=true), sell, price for buy, price for sell
 		# action: [1, 0, 23, 25]
-		self.action_space =  spaces.MultiDiscrete([2, 2, SUIT_SUM, SUIT_SUM])
+		self.action_space =  spaces.MultiDiscrete([2, 2, self.SUIT_SUM, self.SUIT_SUM])
 		
-		# 2-6 player, about 6 cards are reserved for the public pile
-		# each player is given (13-6)*suit_count/player_count private cards
-		self.player_hand_count = (int) ((13-6)*self.suit_count/player_count)
+		# about half cards are reserved for the public pile
+		# each player is given player_hand_count private cards
+		self.player_hand_count = (int) ((self.cards_per_suit)/2*self.suit_count/player_count)
 		
-		self.public_cards_count = 13- self.player_hand_count*player_count
+		self.public_cards_count = self.cards_per_suit*self.suit_count - self.player_hand_count*player_count
 		
 		# sub-piles
-		self.public_sub_pile_cards_count = math.ceil((13 - self.public_cards_count)/self.number_of_sub_piles)
+		self.public_sub_pile_cards_count = math.ceil(self.public_cards_count/self.number_of_sub_piles)
 		
 		# observation: revealed public pile + own hand  + balance + contract
 
@@ -44,8 +50,9 @@ class TradingGameEnv(gym.Env):
 		# [1, 5, 0, 0, 0, 0, 2, 11, 12]
 		self.obs_element_count = self.public_cards_count + self.player_hand_count
 		lower = np.zeros(self.obs_element_count, dtype=np.int) #[0 0 0 0 0]
-		upper = np.full(self.obs_element_count, 13, dtype=np.int)
+		upper = np.full(self.obs_element_count, self.cards_per_suit, dtype=np.int)
 		self.observation_space = spaces.Box(lower , upper, dtype=np.int)
+		
 
 	
 	def reset(self):
@@ -54,10 +61,11 @@ class TradingGameEnv(gym.Env):
 		self.balance = np.full(self.player_count, INITIAL_ACCOUNT_BALANCE, dtype=np.int) #[agent, other_agent1, other_agent2, ....]
 		self.contract = np.zeros(self.player_count, dtype=np.int)
 		self.time_step = 1
+		self.day = 1
 		self.total_reward = 0
 		
 		# deal cards
-		suit_list = np.arange(1, 14)
+		suit_list = np.arange(1, self.cards_per_suit+1)
 		np.random.shuffle(suit_list)
 
 		self.hands = suit_list[0:self.player_count * self.player_hand_count].reshape((self.player_count, self.player_hand_count))
@@ -66,63 +74,70 @@ class TradingGameEnv(gym.Env):
 		self.public_pile = suit_list[self.player_count * self.player_hand_count:]
 		
 			
-		self.sell_offer = PriorityQueue(self.player_count)
-		self.buy_offer = PriorityQueue(self.player_count)
+		self.sell_offer = PriorityQueue()
+		self.buy_offer = PriorityQueue()
 		
 		
 		return self._next_observation()
   
 	def step(self, action):
+		
 		# let other baseline agents to take actions first
-		if len(self.other_agents) == self.player_count-1:
-			for i in range(self.player_count-1):
-				obs_i = self._next_observation(i+1)
-				action_i = self.other_agents[i].predict(obs_i)
-				self._take_action(action_i, i+1)
+		for i in range(self.player_count-1):
+			obs_i = self._next_observation(i+1)
+			action_i = self.other_agents[i].predict(obs_i)
+			self._take_action(action_i, i+1)
 		
 		# Execute one time step within the environment
 		self._take_action(action, AGENT_INDEX)
 		
-		
 		# compute reward
-		# reward = expected profit * timestep
+		# reward = expected profit * day
 		#  = (expected value of public pile * amount of contract + balance 
-		# 		– initial balance ) * timestep
+		# 		– initial balance ) * day
 		#  expected value of public pile = 
 		#     (revealed public pile + expected un-revealed public card value * un-revealed card count)
-		revealed_card_index = min(self.time_step*self.public_sub_pile_cards_count, self.public_pile.shape[0]) 
+		revealed_card_index = min(self.day*self.public_sub_pile_cards_count, self.public_pile.shape[0]) 
 		revealed_value = self.public_pile[0:revealed_card_index].sum()
 		
 		# expected un-revealed public card value = (sum of all cards 
 		# 			– revealed public piles – own hand)/(remaining card count)
-		expected_card_value = ((SUIT_SUM - revealed_value - self.hands[AGENT_INDEX,:].sum()) /
-							(13 - self.player_hand_count - (revealed_card_index)))
+		expected_card_value = ((self.SUIT_SUM - revealed_value - self.hands[AGENT_INDEX,:].sum()) /
+							(self.cards_per_suit - self.player_hand_count - revealed_card_index))
 		expected_value_of_public_pile = (revealed_value + expected_card_value  * 
-							(self.public_pile.shape[0] - self.time_step*self.public_sub_pile_cards_count))
+							(self.public_pile.shape[0] - revealed_card_index))
 		
 		reward = (expected_value_of_public_pile * self.contract[AGENT_INDEX] + 
 							self.balance[AGENT_INDEX] - INITIAL_ACCOUNT_BALANCE)
-		reward *= self.time_step
-		
-
+		reward *= self.day
+	
 		# if it's the last day, give final reward
-		if self.time_step == self.number_of_sub_piles-1:
-			reward += ((self.public_pile.sum() * self.contract[AGENT_INDEX] + 
+		if self.day == self.number_of_sub_piles-1 and self.time_step == self.seq_per_day:
+			final_reward = ((self.public_pile.sum() * self.contract[AGENT_INDEX] + 
 							self.balance[AGENT_INDEX] - INITIAL_ACCOUNT_BALANCE)*
-							(self.time_step + 1))
+							(self.day + 1))
+			reward += final_reward
 		
 		self.total_reward += reward
 		
-		self.time_step += 1
-		done = self.time_step >= self.number_of_sub_piles
+		# if it is the last sequence of that day, go to next day
+		if self.time_step == self.seq_per_day:
+			self.day += 1
+			
+			#reset sequence number
+			self.time_step = 1
+			
+			# clear the offers for the day
+			with self.sell_offer.mutex:
+				self.sell_offer.queue.clear()
+			with self.buy_offer.mutex:
+				self.buy_offer.queue.clear()
+		else:
+			self.time_step += 1
+
+		done = self.day > self.number_of_sub_piles-1
 		obs = self._next_observation()
 		
-		# clear the offers for the day
-		with self.sell_offer.mutex:
-			self.sell_offer.queue.clear()
-		with self.buy_offer.mutex:
-			self.buy_offer.queue.clear()
-			
 		return obs, reward, done, {}
 		
 	def _next_observation(self, agent_index = AGENT_INDEX):
@@ -130,7 +145,7 @@ class TradingGameEnv(gym.Env):
 		obs = np.zeros(self.obs_element_count, dtype=np.int)
 		
 		# public pile
-		revealed_card_index = min(self.time_step*self.public_sub_pile_cards_count, self.public_pile.shape[0])
+		revealed_card_index = min(self.day*self.public_sub_pile_cards_count, self.public_pile.shape[0])
 		obs[0:revealed_card_index] = self.public_pile[0:revealed_card_index]
 		
 		# own hand
@@ -140,31 +155,30 @@ class TradingGameEnv(gym.Env):
 		return obs
 		
 	def get_next_offer(self, agent, buy):
-		# return offer
-		# offer: next highest buy/ lowest sell offer that is not from the agent 
+		# get next oofer that is not placed by the agent
+		# return: offer: next highest buy/ lowest sell offer that is not from the agent 
+		
+		offer = None
 		
 		if buy:
 			pq = self.buy_offer
 		else:
 			pq = self.sell_offer
 		
-		if pq.empty():
-			# if empty, do nothing
-			return None
-		else:
+		if not pq.empty():
 			# if not empty, check if highest buy/ lowest sell offer is from the agent
 			offer_price, offer_agent = pq.get()
 			
 			if offer_agent != agent:
-				return (offer_price, offer_agent)
+				offer = (offer_price, offer_agent)
 			else:
 				# if the offer comes from himself, then we need to look at the next offer
 				offer = self.get_next_offer(agent, buy)
 				
 				# add the self offer to the list
 				pq.put((offer_price, offer_agent))
-				
-				return offer		
+
+		return offer
 		
 	
 	def _take_action(self, action, agent):
@@ -190,12 +204,12 @@ class TradingGameEnv(gym.Env):
 					self.contract[sell_agent] -= 1
 				else:
 					# add the offers to the offer queue (buy price is set to be negative)
-					self.sell_offer.put((lowest_sell, sell_agent))
+					self.sell_offer.put(offer)
 					self.buy_offer.put((-buy_price, agent))
 			else:
 				# add the offers to the offer queue (buy price is set to be negative)
 				self.buy_offer.put((-buy_price, agent))
-				
+			
 		if action[1] == 1:
 			# sell
 			sell_price = action[3]
@@ -217,19 +231,20 @@ class TradingGameEnv(gym.Env):
 				else:
 					# add the offers to the offer queue (buy price is set to be negative)
 					self.sell_offer.put((sell_price, agent))
-					self.buy_offer.put((-highest_buy, buy_agent))
+					self.buy_offer.put(offer)
 			else:
 				# add the offers to the offer queue
 				self.sell_offer.put((sell_price, agent))
-				
 		return
 	
 	def render(self, mode='human', close=False):
 		# Render the environment to the screen
-		if self.time_step == self.number_of_sub_piles:
-			print("************************* End Game *************************")
+		if self.day == self.number_of_sub_piles:
+			print("\n\n====================== End Game ======================")
+		elif self.time_step == 1:
+			print("\n\n====================== Beginning of day ", self.day, " ======================")
 		else:
-			print("******************** Beginning of day ", self.time_step, "********************")
+			print("=================== Before sequence ", self.time_step, " ===================")
 		
 		print("balances: ", self.balance) #[our_agent, opponent1, opponent2, ...]
 		print("contracts: ", self.contract)

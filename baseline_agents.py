@@ -5,7 +5,7 @@ class BaselineAgent1():
 		...
 	
 	def predict(self, obs):
-		return [1,1,50,55] # buy at 50, sell at 55
+		return [1,1,240,250] # buy at 240, sell at 250
 		
 
 		

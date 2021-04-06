@@ -1,19 +1,27 @@
 # CMSC828M Trading Game
 
 Done:
-1. Implement the game environment. We can use OpenAI Gym following this trading game example: https://towardsdatascience.com/creating-a-custom-openai-gym-environment-for-stock-trading-be532be3910e
+1. Implement the game environment
+	a. init()
+	b. reset()
+	c. step()
+	d. render()
+	e. next_observation
+	f. take_action
 2. [1,1,100,10] should post two offers. also disallow self trading
+3. change card numbers to a parameter to constructor
+4. change sequences per day to a parameter to constructor. 		self.time_step represents the sequence number of that day. self.day represents day number. e.g. day 3 sequence 2 is self.time_step = 2
+
 
 TODO:
-0. change 13 cards to a parameter to constructor
-0. randomize turn sequence, change at end of each day
-0. add more sequencies per round
+5. randomize turn sequence, change at end of each day
 1. test the environment (testing starter code in main.py)
 	a. obs correct?
 	b. actions correct?
 	c. reward correct?
 	d. result correct?
 2. implement baseline agents in baseline_agents.py
+3. implement more suits
 
 
 3. training:  starts with 2 players
