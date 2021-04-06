@@ -11,10 +11,10 @@ Done:
 2. [1,1,100,10] should post two offers. also disallow self trading
 3. change card numbers to a parameter to constructor
 4. change sequences per day to a parameter to constructor. 		self.time_step represents the sequence number of that day. self.day represents day number. e.g. day 3 sequence 2 is self.time_step = 2
+5. randomize turn sequence. change at end of each day
 
 
 TODO:
-5. randomize turn sequence, change at end of each day
 1. test the environment (testing starter code in main.py)
 	a. obs correct?
 	b. actions correct?

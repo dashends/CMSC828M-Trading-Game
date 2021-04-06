@@ -24,6 +24,7 @@ class TradingGameEnv(gym.Env):
 		self.cards_per_suit = cards_per_suit
 		self.seq_per_day = seq_per_day
 		self.SUIT_SUM = (1+cards_per_suit)*cards_per_suit/2
+		self.turn_sequence = np.arange(0, self.player_count)
 		
 		if len(self.other_agents) != self.player_count-1:
 			print("Error: other_agent_list do not conform to the number of players. You may need to add/remove some other agents")
@@ -63,6 +64,8 @@ class TradingGameEnv(gym.Env):
 		self.time_step = 1
 		self.day = 1
 		self.total_reward = 0
+		if self.random_seq:
+			np.random.shuffle(self.turn_sequence)
 		
 		# deal cards
 		suit_list = np.arange(1, self.cards_per_suit+1)
@@ -82,19 +85,24 @@ class TradingGameEnv(gym.Env):
   
 	def step(self, action):
 		
-		# let other baseline agents to take actions first
-		for i in range(self.player_count-1):
-			obs_i = self._next_observation(i+1)
-			action_i = self.other_agents[i].predict(obs_i)
-			self._take_action(action_i, i+1)
+		# take actions based upon turn sequence
+		for i in self.turn_sequence:
 		
-		# Execute one time step within the environment
-		self._take_action(action, AGENT_INDEX)
+			# if it is an opponent agent
+			if i != AGENT_INDEX:
+				obs_i = self._next_observation(i)
+				action_i = self.other_agents[i-1].predict(obs_i)
+				self._take_action(action_i, i)
+			
+			else:
+				# if it is our agent
+		
+				# Execute one time step within the environment
+				self._take_action(action, AGENT_INDEX)
 		
 		# compute reward
 		# reward = expected profit * day
-		#  = (expected value of public pile * amount of contract + balance 
-		# 		– initial balance ) * day
+		#  = (expected value of public pile * amount of contract + balance  – initial balance ) * day
 		#  expected value of public pile = 
 		#     (revealed public pile + expected un-revealed public card value * un-revealed card count)
 		revealed_card_index = min(self.day*self.public_sub_pile_cards_count, self.public_pile.shape[0]) 
@@ -132,12 +140,18 @@ class TradingGameEnv(gym.Env):
 				self.sell_offer.queue.clear()
 			with self.buy_offer.mutex:
 				self.buy_offer.queue.clear()
+				
+			# randomize sequence for next day
+			if self.random_seq:
+				np.random.shuffle(self.turn_sequence)
 		else:
 			self.time_step += 1
 
 		done = self.day > self.number_of_sub_piles-1
 		obs = self._next_observation()
 		
+		
+			
 		return obs, reward, done, {}
 		
 	def _next_observation(self, agent_index = AGENT_INDEX):
@@ -249,6 +263,13 @@ class TradingGameEnv(gym.Env):
 		print("balances: ", self.balance) #[our_agent, opponent1, opponent2, ...]
 		print("contracts: ", self.contract)
 		print("total reward: ", self.total_reward )
+		
+		
+		if self.day == self.number_of_sub_piles:
+			# print net worth at the end of game
+			print("total net worth: ", self.balance + self.contract * self.public_pile.sum())
+		else:
+			print("turn sequence: ", self.turn_sequence)
 		
 		
 if __name__ == "__main__":

@@ -5,6 +5,7 @@ class BaselineAgent1():
 		...
 	
 	def predict(self, obs):
+		print("baseline1 action: ", [1,1,240,250])
 		return [1,1,240,250] # buy at 240, sell at 250
 		
 
@@ -18,4 +19,5 @@ class BaselineAgent2():
 		...
 	
 	def predict(self, obs):
-		return [1,1,100,10] # buy at 100, sell at 10
+		print("baseline2 action:", [1,1,400,10])
+		return [1,1,400,10] # buy at 400, sell at 10
