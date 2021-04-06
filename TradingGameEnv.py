@@ -8,6 +8,7 @@ from queue import PriorityQueue
  
 INITIAL_ACCOUNT_BALANCE = 10000
 AGENT_INDEX = 0
+NO_ACTION_PANELTY = -5
 	
 class TradingGameEnv(gym.Env):
 	"""A trading game environment for OpenAI gym"""
@@ -117,6 +118,7 @@ class TradingGameEnv(gym.Env):
 		
 		reward = (expected_value_of_public_pile * self.contract[AGENT_INDEX] + 
 							self.balance[AGENT_INDEX] - INITIAL_ACCOUNT_BALANCE)
+		reward += NO_ACTION_PANELTY
 		reward *= self.day
 	
 		# if it's the last day, give final reward

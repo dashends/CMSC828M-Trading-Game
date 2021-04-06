@@ -42,8 +42,8 @@ observation_space: public pile + own hand + money+ transection history + contrac
 none of the Stable Baselines can handle Dict/Tuple spaces. Concatenate them into Box space.
 
 
-reward: expected profit * timestep
-=  (expected value of public pile * amount of contract + cureent balance – initial balance) * timestep
+reward: expected profit * timestep + panelty if no action
+=  (expected value of public pile * amount of contract + cureent balance – initial balance) * timestep + panelty if no action
 times timestep to incentive late game profits more than in the beginning
 
 
