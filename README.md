@@ -2,12 +2,12 @@
 
 Done:
 1. Implement the game environment. We can use OpenAI Gym following this trading game example: https://towardsdatascience.com/creating-a-custom-openai-gym-environment-for-stock-trading-be532be3910e
+2. [1,1,100,10] should post two offers. also disallow self trading
 
 TODO:
 0. change 13 cards to a parameter to constructor
 0. randomize turn sequence, change at end of each day
 0. add more sequencies per round
-0. [1,1,100,10] should post two offers. also disallow self trading (Da)
 1. test the environment (testing starter code in main.py)
 	a. obs correct?
 	b. actions correct?

@@ -126,6 +126,7 @@ class TradingGameEnv(gym.Env):
 		return obs, reward, done, {}
 		
 	def _next_observation(self, agent_index = AGENT_INDEX):
+		# get the observation for the agent at the index 
 		obs = np.zeros(self.obs_element_count, dtype=np.int)
 		
 		# public pile
@@ -138,15 +139,47 @@ class TradingGameEnv(gym.Env):
 		# return [1, 5, 0, 0, 0, 0, 2, 11, 12]
 		return obs
 		
+	def get_next_offer(self, agent, buy):
+		# return offer
+		# offer: next highest buy/ lowest sell offer that is not from the agent 
+		
+		if buy:
+			pq = self.buy_offer
+		else:
+			pq = self.sell_offer
+		
+		if pq.empty():
+			# if empty, do nothing
+			return None
+		else:
+			# if not empty, check if highest buy/ lowest sell offer is from the agent
+			offer_price, offer_agent = pq.get()
+			
+			if offer_agent != agent:
+				return (offer_price, offer_agent)
+			else:
+				# if the offer comes from himself, then we need to look at the next offer
+				offer = self.get_next_offer(agent, buy)
+				
+				# add the self offer to the list
+				pq.put((offer_price, offer_agent))
+				
+				return offer		
+		
+	
 	def _take_action(self, action, agent):
+		# action: nparray [buy, sell, buy_price, sell_price]
+		# agent: the index of the agent who wants to take the action
+		
 		if action[0] == 1:
 			# buy
 			buy_price = action[2]
 			
 			# settle offers
-			# find lowest sell
-			if not self.sell_offer.empty():
-				lowest_sell, sell_agent = self.sell_offer.get()
+			# find lowest sell offer
+			offer = self.get_next_offer(agent = agent, buy = False)
+			if offer:
+				lowest_sell, sell_agent = offer
 				
 				# if the offer is settled
 				if lowest_sell <= buy_price:
@@ -160,6 +193,7 @@ class TradingGameEnv(gym.Env):
 					self.sell_offer.put((lowest_sell, sell_agent))
 					self.buy_offer.put((-buy_price, agent))
 			else:
+				# add the offers to the offer queue (buy price is set to be negative)
 				self.buy_offer.put((-buy_price, agent))
 				
 		if action[1] == 1:
@@ -168,8 +202,9 @@ class TradingGameEnv(gym.Env):
 			
 			# settle offers
 			# find lowest highest buy (buy price is set to be negative)
-			if not self.buy_offer.empty():
-				highest_buy, buy_agent = self.buy_offer.get()
+			offer = self.get_next_offer(agent = agent, buy = True)
+			if offer:
+				highest_buy, buy_agent = offer
 				highest_buy = -highest_buy
 				
 				# if the offer is settled
@@ -184,6 +219,7 @@ class TradingGameEnv(gym.Env):
 					self.sell_offer.put((sell_price, agent))
 					self.buy_offer.put((-highest_buy, buy_agent))
 			else:
+				# add the offers to the offer queue
 				self.sell_offer.put((sell_price, agent))
 				
 		return
@@ -191,11 +227,11 @@ class TradingGameEnv(gym.Env):
 	def render(self, mode='human', close=False):
 		# Render the environment to the screen
 		if self.time_step == self.number_of_sub_piles:
-			print("************************ End Game ************************")
+			print("************************* End Game *************************")
 		else:
 			print("******************** Beginning of day ", self.time_step, "********************")
 		
-		print("balances: ", self.balance)
+		print("balances: ", self.balance) #[our_agent, opponent1, opponent2, ...]
 		print("contracts: ", self.contract)
 		print("total reward: ", self.total_reward )
 		
