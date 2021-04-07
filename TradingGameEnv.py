@@ -118,7 +118,9 @@ class TradingGameEnv(gym.Env):
 		
 		reward = (expected_value_of_public_pile * self.contract[AGENT_INDEX] + 
 							self.balance[AGENT_INDEX] - INITIAL_ACCOUNT_BALANCE)
-		reward += NO_ACTION_PANELTY
+		# add some panelty if the agent is doing nothing
+		if action[0] == 0 and if action[1] == 0:
+			reward += NO_ACTION_PANELTY
 		reward *= self.day
 	
 		# if it's the last day, give final reward
