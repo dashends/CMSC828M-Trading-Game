@@ -22,11 +22,19 @@ class EVAgent():
 	'''
 	Agent calculates the E.V. of public pile and places bets accordingly
 	'''
-	def __init__(self, obs, agent_idx, betting_margin = 100):
-		self.hand = obs.hands[agent_idx]
+	def __init__(self, agent_idx, num_players, cards_per_suit, hands, player_hand_count, public_pile, betting_margin = 100, suit_count = 1):
+		self.hand = hands[agent_idx]
 		self.hand_sum = self.hand.sum()
+		self.num_players = num_players
+		self.cards_per_suit = cards_per_suit
+		self.hand_sum = self.hand.sum()
+		self.SUIT_SUM = (self.cards_per_suit)*(1 + self.cards_per_suit)/2
+		self.suit_count = suit_count
+		self.player_hand_count = player_hand_count
+		self.public_pile = public_pile
+		self.betting_margin = betting_margin
 
-	def predict(self, obs):
+	def predict(self, env):
 
 		'''
 		E_GroundTruth = totalSum
@@ -34,10 +42,10 @@ class EVAgent():
 		- public_revealed_pile_sum
 		- #opponents*#cards*avgCardVal
 		'''
-		avg_card_val = (obs.SUIT_SUM*obs.suit_count-self.hand_sum)/(obs.cards_per_suit - obs.player_hand_count)
-		EV = obs.SUIT_SUM*obs.suit_count \
+		avg_card_val = (self.SUIT_SUM * self.suit_count - self.hand_sum)/(self.cards_per_suit - self.player_hand_count)
+		EV = self.SUIT_SUM*self.suit_count \
 			 - self.hand_sum  \
-			 - obs.observation_space[:obs.public_cards_count].sum() \
-			 - (obs.player_count-1)*(obs.player_hand_count)*(avg_card_val)
+			 - (self.num_players-1)*(self.player_hand_count)*(avg_card_val)
+		self.val = [1, 1, EV - self.betting_margin, EV + self.betting_margin]
 
-		return [1, 1, EV-betting_margin, EV+betting_margin]
+		return self.val

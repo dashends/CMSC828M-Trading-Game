@@ -15,7 +15,7 @@ class TradingGameEnv(gym.Env):
 	metadata = {'render.modes': ['human']}
 
 
-	def __init__(self, player_count = 2, suit_count = 1, number_of_sub_piles = 4, other_agent_list = [], seq_per_day = 1, random_seq = False, cards_per_suit = 13):
+	def __init__(self, suit_list, player_count = 2, suit_count = 1, number_of_sub_piles = 4, other_agent_list = [], seq_per_day = 1, random_seq = False, cards_per_suit = 13):
 		super(TradingGameEnv, self).__init__()
 		self.player_count = player_count
 		self.suit_count = suit_count
@@ -26,6 +26,7 @@ class TradingGameEnv(gym.Env):
 		self.seq_per_day = seq_per_day
 		self.SUIT_SUM = (1+cards_per_suit)*cards_per_suit/2
 		self.turn_sequence = np.arange(0, self.player_count)
+		self.suit_list = suit_list
 
 		if len(self.other_agents) != self.player_count-1:
 			print("Error: other_agent_list do not conform to the number of players. You may need to add/remove some other agents")
@@ -70,14 +71,11 @@ class TradingGameEnv(gym.Env):
 		if self.random_seq:
 			np.random.shuffle(self.turn_sequence)
 
-		# deal cards
-		suit_list = np.arange(1, self.cards_per_suit+1)
-		np.random.shuffle(suit_list)
 
-		self.hands = suit_list[0:self.player_count * self.player_hand_count].reshape((self.player_count, self.player_hand_count))
+		self.hands = self.suit_list[0:self.player_count * self.player_hand_count].reshape((self.player_count, self.player_hand_count))
 
 
-		self.public_pile = suit_list[self.player_count * self.player_hand_count:]
+		self.public_pile = self.suit_list[self.player_count * self.player_hand_count:]
 
 
 		self.sell_offer = PriorityQueue()
