@@ -1,3 +1,4 @@
+import numpy as np
 class BaselineAgent1():
 	# TODO
 
@@ -15,37 +16,34 @@ class BaselineAgent2():
 		...
 
 	def predict(self, obs):
-		#print("baseline2 action:", [1,1,400,10])
 		return [1,1,2200,2800] # buy at 400, sell at 10
 
 class EVAgent():
 	'''
 	Agent calculates the E.V. of public pile and places bets accordingly
 	'''
-	def __init__(self, agent_idx, num_players, cards_per_suit, hands, player_hand_count, public_pile, betting_margin = 100, suit_count = 1):
-		self.hand = hands[agent_idx]
-		self.hand_sum = self.hand.sum()
+	def __init__(self, agent_idx, num_players, cards_per_suit, player_hand_count, public_cards_count, betting_margin = 100, suit_count = 1):
+
 		self.num_players = num_players
 		self.cards_per_suit = cards_per_suit
-		self.hand_sum = self.hand.sum()
 		self.SUIT_SUM = (self.cards_per_suit)*(1 + self.cards_per_suit)/2
 		self.suit_count = suit_count
 		self.player_hand_count = player_hand_count
-		self.public_pile = public_pile
 		self.betting_margin = betting_margin
+		self.public_cards_count = public_cards_count
 
-	def predict(self, env):
+	def predict(self, obs):
 
 		'''
-		E_GroundTruth = totalSum
-		- hand_sum
-		- public_revealed_pile_sum
-		- #opponents*#cards*avgCardVal
+		    (total_sum - own_hand_sum - public_revealed_sum)
+		EV = 		---------------------------
+					  number_of_unknown_cards
+		val = Revealed_public_pile_sum + (#unrevealed_cards_in_public_pile)*(EV_unrevealed_cards)
 		'''
-		avg_card_val = (self.SUIT_SUM * self.suit_count - self.hand_sum)/(self.cards_per_suit - self.player_hand_count)
-		EV = self.SUIT_SUM*self.suit_count \
-			 - self.hand_sum  \
-			 - (self.num_players-1)*(self.player_hand_count)*(avg_card_val)
-		self.val = [1, 1, EV - self.betting_margin, EV + self.betting_margin]
+		EV = (self.SUIT_SUM - obs[self.public_cards_count:].sum() - obs[:self.public_cards_count].sum())/(np.count_nonzero(obs[:self.public_cards_count]) + (self.num_players - 1)*self.player_hand_count)
+		val = obs[:self.public_cards_count].sum() + (np.count_nonzero(obs[:self.public_cards_count]))*(EV)
+
+
+		self.val = [1, 1, val - self.betting_margin, val + self.betting_margin]
 
 		return self.val

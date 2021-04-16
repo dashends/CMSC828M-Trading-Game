@@ -15,7 +15,7 @@ class TradingGameEnv(gym.Env):
 	metadata = {'render.modes': ['human']}
 
 
-	def __init__(self, suit_list, player_count = 2, suit_count = 1, number_of_sub_piles = 4, other_agent_list = [], seq_per_day = 1, random_seq = False, cards_per_suit = 13):
+	def __init__(self, player_count = 2, suit_count = 1, number_of_sub_piles = 4, other_agent_list = [], seq_per_day = 1, random_seq = False, cards_per_suit = 13, public_cards_count = 9):
 		super(TradingGameEnv, self).__init__()
 		self.player_count = player_count
 		self.suit_count = suit_count
@@ -26,7 +26,7 @@ class TradingGameEnv(gym.Env):
 		self.seq_per_day = seq_per_day
 		self.SUIT_SUM = (1+cards_per_suit)*cards_per_suit/2
 		self.turn_sequence = np.arange(0, self.player_count)
-		self.suit_list = suit_list
+		self.public_cards_count = public_cards_count
 
 		if len(self.other_agents) != self.player_count-1:
 			print("Error: other_agent_list do not conform to the number of players. You may need to add/remove some other agents")
@@ -39,7 +39,6 @@ class TradingGameEnv(gym.Env):
 		# each player is given player_hand_count private cards
 		self.player_hand_count = (int) ((self.cards_per_suit)/2*self.suit_count/player_count)
 
-		self.public_cards_count = self.cards_per_suit*self.suit_count - self.player_hand_count*player_count
 
 		# sub-piles
 		self.public_sub_pile_cards_count = math.ceil(self.public_cards_count/self.number_of_sub_piles)
@@ -71,11 +70,13 @@ class TradingGameEnv(gym.Env):
 		if self.random_seq:
 			np.random.shuffle(self.turn_sequence)
 
+		suit_list = np.arange(1, self.cards_per_suit+1)
+		np.random.shuffle(suit_list)
 
-		self.hands = self.suit_list[0:self.player_count * self.player_hand_count].reshape((self.player_count, self.player_hand_count))
+		self.hands = suit_list[0:self.player_count * self.player_hand_count].reshape((self.player_count, self.player_hand_count))
 
 
-		self.public_pile = self.suit_list[self.player_count * self.player_hand_count:]
+		self.public_pile = suit_list[self.player_count * self.player_hand_count:]
 
 
 		self.sell_offer = PriorityQueue()
@@ -95,6 +96,9 @@ class TradingGameEnv(gym.Env):
 			if i != AGENT_INDEX:
 				obs_i = self._next_observation(i)
 				action_i = self.other_agents[i-1].predict(obs_i)
+				'''
+				actions of agent i takes place here
+				'''
 				self._take_action(action_i, i)
 
 			else:
@@ -205,7 +209,7 @@ class TradingGameEnv(gym.Env):
 	def _take_action(self, action, agent):
 		# action: nparray [buy, sell, buy_price, sell_price]
 		# agent: the index of the agent who wants to take the action
-
+		print("agent: "+str(agent)+" action: ", str(action))
 		if action[0] == 1:
 			# buy
 			buy_price = action[2]
