@@ -28,7 +28,7 @@ print('obs=', obs)
 
 while(True):
 	print('Taking actions for the current sequence......')
-	obs, reward, done, info = env.step([1,1, 230, 240]) # buy at 230; sell at 240
+	obs, reward, done, info = env.step(env.action_space.sample()) # take a random action
 	print('reward=', reward, 'done=', done)
 	env.render()
 	print('obs=', obs)

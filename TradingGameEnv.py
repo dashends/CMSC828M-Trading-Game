@@ -107,6 +107,7 @@ class TradingGameEnv(gym.Env):
 				# Execute one time step within the environment
 				self._take_action(action, AGENT_INDEX)
 
+		'''
 		# compute reward
 		# reward = expected profit * day
 		#  = (expected value of public pile * amount of contract + balance  – initial balance ) * day
@@ -124,6 +125,12 @@ class TradingGameEnv(gym.Env):
 
 		reward = (expected_value_of_public_pile * self.contract[AGENT_INDEX] +
 							self.balance[AGENT_INDEX] - INITIAL_ACCOUNT_BALANCE)
+		'''
+		
+		# give reward based on ground truth
+		reward = (self.public_pile.sum() * self.contract[AGENT_INDEX] +
+							self.balance[AGENT_INDEX] - INITIAL_ACCOUNT_BALANCE)
+							
 		# add some panelty if the agent is doing nothing
 		if (action[0] == 0 and action[1] == 0):
 			reward += NO_ACTION_PENALTY
@@ -162,7 +169,7 @@ class TradingGameEnv(gym.Env):
 
 
 
-		return obs, reward, done, {}
+		return obs, (float) (reward), done, {}
 
 	def _next_observation(self, agent_index = AGENT_INDEX):
 		# get the observation for the agent at the index
@@ -209,7 +216,8 @@ class TradingGameEnv(gym.Env):
 	def _take_action(self, action, agent):
 		# action: nparray [buy, sell, buy_price, sell_price]
 		# agent: the index of the agent who wants to take the action
-		print("agent: "+str(agent)+" action: ", str(action))
+		
+		# print("agent: "+str(agent)+" action: ", str(action))
 		if action[0] == 1:
 			# buy
 			buy_price = action[2]

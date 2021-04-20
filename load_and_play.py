@@ -6,7 +6,7 @@ import numpy as np
 from stable_baselines.common.callbacks import CheckpointCallback
 from stable_baselines.common.env_checker import check_env
 
-# starts with a simpler version of the game
+# we need to use the same settings as the env used in training. Otherwise the agent may be confused.
 NUM_PLAYERS = 2
 SEQ_PER_DAY = 2
 CARDS_PER_SUIT = 10
@@ -22,25 +22,11 @@ agents = [baseline_agents.EVAgent(agent_idx = 1, num_players = NUM_PLAYERS, bett
 env = TradingGameEnv.TradingGameEnv(player_count = NUM_PLAYERS, other_agent_list = agents, seq_per_day = SEQ_PER_DAY, cards_per_suit = CARDS_PER_SUIT, public_cards_count = PUBLIC_CARDS_COUNT, random_seq = True)
 
 
-
-# If the environment don't follow the interface, an error will be thrown
-check_env(env, warn=True)
-print("The environment is valid.")
-
-
-model = PPO2('MlpPolicy', env)
-
-
-# save a copy of model every 1e5 games
-checkpoint_callback = CheckpointCallback(save_freq=1e5, save_path='./model_checkpoints/')
-
-model.learn(total_timesteps=(int) (1e5), callback=[checkpoint_callback])
-
-# save final model
-model.save("model_1")
+# load the trained model
+model = PPO2.load("model_1")
 
 # Evaluate the agent
-mean_reward, std_reward = evaluate_policy(model, model.get_env(), n_eval_episodes=50)
+mean_reward, std_reward = evaluate_policy(model, env, n_eval_episodes=50)
 print("mean_reward: ", mean_reward)
 print("std_reward: ", std_reward)
 

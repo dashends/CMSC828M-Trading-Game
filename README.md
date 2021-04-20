@@ -9,11 +9,13 @@ Done:
 	e. next_observation
 	f. take_action
 2. [1,1,100,10] should post two offers. also disallow self trading
-3. change card numbers to a parameter to constructor
-4. change sequences per day to a parameter to constructor. 		
+3. implement more suits
+4. change card numbers to a parameter to constructor
+5. change sequences per day to a parameter to constructor. 		
 	self.sequence_counter represents the current sequence number of that day; self.day represents day number. 
 	e.g. day 3 sequence 2 is self.sequence_counter = 2
-5. randomize turn sequence. change at end of each day
+6. randomize turn sequence. change at end of each day
+7. implement baseline agents in baseline_agents.py 	(Amir)
 
 
 TODO:
@@ -22,16 +24,13 @@ TODO:
 	b. actions correct?
 	c. reward correct?
 	d. result correct?
-2. implement baseline agents in baseline_agents.py
-3. implement more suits
-
-
-3. training:  starts with 2 players
-
-4. implement self-play
-5. self-play training
-6. playing against the agent
-
+2. training:  starts with 2 players
+3. plot training results (mean rewards vs num of time steps) (DQN vs PPO2) (MLP policy vs. RNN policy etc.)
+3. implement self-play
+4. self-play training
+5. playing against the agent
+6. how to let the agent scale to different setups of the game env? For example, play against 3 players with 4 suits and then 4 players with 2 suits?
+7. for continuous spaces, normalize observation/action space if possible (A good practice is to rescale your actions to lie in [-1, 1])
 
 
 
@@ -42,10 +41,11 @@ observation_space: public pile + own hand + money+ transection history + contrac
 none of the Stable Baselines can handle Dict/Tuple spaces. Concatenate them into Box space.
 
 
-reward: expected profit * timestep + panelty if no action
+reward: 
+1. expected profit * timestep + panelty if no action
 =  (expected value of public pile * amount of contract + cureent balance – initial balance) * timestep + panelty if no action
 times timestep to incentive late game profits more than in the beginning
-
+2. give reward based on ground truth
 
 Start with 1 suit, 1 contract, 1 sequence per round, 2 agents
 
