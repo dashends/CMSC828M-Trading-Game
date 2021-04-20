@@ -45,5 +45,6 @@ class EVAgent():
 
 
 		self.val = [1, 1, val - self.betting_margin, val + self.betting_margin]
-
+		# print("EV Agent action", self.val)
+		
 		return self.val

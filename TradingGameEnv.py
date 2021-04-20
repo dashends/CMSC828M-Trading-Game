@@ -15,7 +15,7 @@ class TradingGameEnv(gym.Env):
 	metadata = {'render.modes': ['human']}
 
 
-	def __init__(self, player_count = 2, suit_count = 1, number_of_sub_piles = 4, other_agent_list = [], seq_per_day = 1, random_seq = False, cards_per_suit = 13, public_cards_count = 9):
+	def __init__(self, player_count = 2, suit_count = 1, number_of_sub_piles = 4, other_agent_list = [], seq_per_day = 1, random_seq = False, cards_per_suit = 13, public_cards_count = 9, extensive_obs = False, self_play = False):
 		super(TradingGameEnv, self).__init__()
 		self.player_count = player_count
 		self.suit_count = suit_count
@@ -62,7 +62,7 @@ class TradingGameEnv(gym.Env):
 	def reset(self):
 		# Reset the state of the environment to an initial state
 		# the agent is place at AGENT_INDEX = 0 row
-		self.balance = np.full(self.player_count, INITIAL_ACCOUNT_BALANCE, dtype=np.int) #[agent, other_agent1, other_agent2, ....]
+		self.balance = np.full(self.player_count, INITIAL_ACCOUNT_BALANCE, dtype=np.float32) #[agent, other_agent1, other_agent2, ....]
 		self.contract = np.zeros(self.player_count, dtype=np.int)
 		self.sequence_counter = 1
 		self.day = 1
@@ -89,6 +89,9 @@ class TradingGameEnv(gym.Env):
 		### TODO: Use data structures to recor transaction history
 		##
 
+		self.contract_prev = self.contract[AGENT_INDEX] 
+		self.balance_prev = self.balance[AGENT_INDEX]
+		
 		# take actions based upon turn sequence
 		for i in self.turn_sequence:
 
@@ -127,9 +130,9 @@ class TradingGameEnv(gym.Env):
 							self.balance[AGENT_INDEX] - INITIAL_ACCOUNT_BALANCE)
 		'''
 		
-		# give reward based on ground truth
-		reward = (self.public_pile.sum() * self.contract[AGENT_INDEX] +
-							self.balance[AGENT_INDEX] - INITIAL_ACCOUNT_BALANCE)
+		# give reward based on ground truth for last action only
+		reward = (self.public_pile.sum() * (self.contract[AGENT_INDEX]-self.contract_prev) +
+							(self.balance[AGENT_INDEX]-self.balance_prev))
 							
 		# add some panelty if the agent is doing nothing
 		if (action[0] == 0 and action[1] == 0):

@@ -8,7 +8,7 @@ from stable_baselines.common.env_checker import check_env
 
 # we need to use the same settings as the env used in training. Otherwise the agent may be confused.
 NUM_PLAYERS = 2
-SEQ_PER_DAY = 2
+SEQ_PER_DAY = 100
 CARDS_PER_SUIT = 10
 SUIT_COUNT = 1
 BETTING_MARGIN = CARDS_PER_SUIT*CARDS_PER_SUIT/100

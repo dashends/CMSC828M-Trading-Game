@@ -16,6 +16,7 @@ Done:
 	e.g. day 3 sequence 2 is self.sequence_counter = 2
 6. randomize turn sequence. change at end of each day
 7. implement baseline agents in baseline_agents.py 	(Amir)
+8. training:  starts with 2 players
 
 
 TODO:
@@ -24,10 +25,13 @@ TODO:
 	b. actions correct?
 	c. reward correct?
 	d. result correct?
-2. training:  starts with 2 players
-3. plot training results (mean rewards vs num of time steps) (DQN vs PPO2) (MLP policy vs. RNN policy etc.)
-3. implement self-play
+3. add obs spaces (Amir)
+3. implement self-play (Da)
 4. self-play training
+
+3. plot training results (mean rewards vs num of time steps) (DQN vs PPO2) (MLP policy vs. RNN policy etc.)
+
+
 5. playing against the agent
 6. how to let the agent scale to different setups of the game env? For example, play against 3 players with 4 suits and then 4 players with 2 suits?
 7. for continuous spaces, normalize observation/action space if possible (A good practice is to rescale your actions to lie in [-1, 1])
