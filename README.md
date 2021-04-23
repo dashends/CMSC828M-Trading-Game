@@ -16,7 +16,8 @@ Done:
 	e.g. day 3 sequence 2 is self.sequence_counter = 2
 6. randomize turn sequence. change at end of each day
 7. implement baseline agents in baseline_agents.py 	(Amir)
-8. training:  starts with 2 players
+8. implement self-play 
+9. training:  starts with 2 players
 
 
 TODO:
@@ -26,12 +27,17 @@ TODO:
 	c. reward correct?
 	d. result correct?
 3. add obs spaces (Amir)
-3. implement self-play (Da)
+
 4. self-play training
+3. plot training results (mean rewards vs num of time steps) (DQN vs PPO2) (MLP policy vs. RNN policy etc.), quality scores of past selves
 
-3. plot training results (mean rewards vs num of time steps) (DQN vs PPO2) (MLP policy vs. RNN policy etc.)
 
+4. vec env?
 
+4. dynamic sampling and evaluation for self play
+4. randomization to force exploration. e.g. cost multiplier of contracts. Initial states of the but/sell offer markets. 
+	Sufficiently diverse training games are necessary to ensure robustness to the wide variety of strategies and situations that arise in games against human opponents.
+	
 5. playing against the agent
 6. how to let the agent scale to different setups of the game env? For example, play against 3 players with 4 suits and then 4 players with 2 suits?
 7. for continuous spaces, normalize observation/action space if possible (A good practice is to rescale your actions to lie in [-1, 1])
@@ -49,7 +55,7 @@ reward:
 1. expected profit * timestep + panelty if no action
 =  (expected value of public pile * amount of contract + cureent balance – initial balance) * timestep + panelty if no action
 times timestep to incentive late game profits more than in the beginning
-2. give reward based on ground truth
+2. give reward based on ground truth. no need to times timestep because profit is determined for each action. No need to incentive late game profits more than in the beginning
 
 Start with 1 suit, 1 contract, 1 sequence per round, 2 agents
 
@@ -61,6 +67,7 @@ Training against baseline models is easier to start with. But the performance mi
 Self-play: 
 1. To avoid “strategy collapse”, the agent trains 80% of its games against itself and the other 20% against its past selves.
 2. To force exploration in strategy space, during training (and only during training) we may randomize the properties of the units.
+
 
 
 User testing: we can play against the agent (see https://github.com/openai/gym/blob/master/gym/utils/play.py#L26
