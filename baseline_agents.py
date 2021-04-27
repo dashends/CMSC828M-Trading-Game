@@ -40,11 +40,11 @@ class EVAgent():
 					  number_of_unknown_cards
 		val = Revealed_public_pile_sum + (#unrevealed_cards_in_public_pile)*(EV_unrevealed_cards)
 		'''
-		EV = (self.SUIT_SUM - obs[self.public_cards_count:].sum() - obs[:self.public_cards_count].sum())/(self.public_cards_count - np.count_nonzero(obs[:self.public_cards_count]) + (self.num_players - 1)*self.player_hand_count)
+		EV = (self.SUIT_SUM - obs[-self.player_hand_count:].sum() - obs[:self.public_cards_count].sum())/(self.public_cards_count - np.count_nonzero(obs[:self.public_cards_count]) + (self.num_players - 1)*self.player_hand_count)
 		val = obs[:self.public_cards_count].sum() + (self.public_cards_count - np.count_nonzero(obs[:self.public_cards_count]))*(EV)
 
-		
+
 		self.val = [1, 1, val - self.betting_margin, val + self.betting_margin]
 		#print("EV Agent action", self.val)
-		
+
 		return self.val

@@ -1,6 +1,5 @@
 """
 This script trains the agent and saves resulting model as SAVE_NAME.zip. It also saves copies of past models to model_checkpoints folder.
-
 """
 
 import TradingGameEnv
@@ -18,14 +17,14 @@ def make_env(rank, seed=10000):
 	Utility function for multiprocessed env.
 	"""
 	def _init():
-		env = TradingGameEnv.TradingGameEnv(player_count = NUM_PLAYERS, other_agent_list = agents, 
-			seq_per_day = SEQ_PER_DAY, cards_per_suit = CARDS_PER_SUIT, public_cards_count = PUBLIC_CARDS_COUNT, 
+		env = TradingGameEnv.TradingGameEnv(player_count = NUM_PLAYERS, other_agent_list = agents,
+			seq_per_day = SEQ_PER_DAY, cards_per_suit = CARDS_PER_SUIT, public_cards_count = PUBLIC_CARDS_COUNT,
 			random_seq = True, self_play = SELF_PLAY, policy_type = POLICY_TYPE, self_copy_freq = SELF_COPY_FREQ)
 		env.seed(seed + rank)
 		return env
 	set_global_seeds(seed)
 	return _init
-	
+
 class CustomCallback(BaseCallback):
 	"""
 	A custom callback that derives from ``BaseCallback``.
@@ -33,7 +32,7 @@ class CustomCallback(BaseCallback):
 	def __init__(self, model, verbose=0):
 		super(CustomCallback, self).__init__(verbose)
 		self.model = model
-		
+
 	def _on_step(self) -> bool:
 		"""
 		This method will be called by the model after each call to `env.step()`.
@@ -68,17 +67,17 @@ if __name__ == '__main__':
 
 	# add 1 baseline agent
 	agents = [baseline_agents.EVAgent(agent_idx = 1, num_players = NUM_PLAYERS, betting_margin = BETTING_MARGIN, cards_per_suit = CARDS_PER_SUIT, player_hand_count = hand_count, public_cards_count = PUBLIC_CARDS_COUNT)]
-	env = TradingGameEnv.TradingGameEnv(player_count = NUM_PLAYERS, other_agent_list = agents, 
-		seq_per_day = SEQ_PER_DAY, cards_per_suit = CARDS_PER_SUIT, public_cards_count = PUBLIC_CARDS_COUNT, 
+	env = TradingGameEnv.TradingGameEnv(player_count = NUM_PLAYERS, other_agent_list = agents,
+		seq_per_day = SEQ_PER_DAY, cards_per_suit = CARDS_PER_SUIT, public_cards_count = PUBLIC_CARDS_COUNT,
 		random_seq = True, self_play = SELF_PLAY, policy_type = POLICY_TYPE, self_copy_freq = SELF_COPY_FREQ)
 
 
-		
+
 	num_cpu = 6  # Number of processes to use
 	# Create the vectorized environment
 	env = SubprocVecEnv([make_env(i) for i in range(num_cpu)])
 
-		
+
 	model = PPO2(POLICY_TYPE, env) # by default n_steps=128, after 128 steps the policy will be updated. If 3 days per game and 2 seq per day, then every update reqires 128/2/3 = 21 games
 	env.env_method("set_model_reference", model.get_parameters())
 
@@ -93,7 +92,7 @@ if __name__ == '__main__':
 
 
 
-	model.learn(total_timesteps=(int)(1e8), callback=call_back_list)
+	model.learn(total_timesteps=(int)(1e4), callback=call_back_list)
 
 
 	# save final model
@@ -104,8 +103,8 @@ if __name__ == '__main__':
 
 	# add 1 baseline agent
 	agents = [baseline_agents.EVAgent(agent_idx = 1, num_players = NUM_PLAYERS, betting_margin = BETTING_MARGIN, cards_per_suit = CARDS_PER_SUIT, player_hand_count = hand_count, public_cards_count = PUBLIC_CARDS_COUNT)]
-	env = TradingGameEnv.TradingGameEnv(player_count = NUM_PLAYERS, other_agent_list = agents, 
-		seq_per_day = SEQ_PER_DAY, cards_per_suit = CARDS_PER_SUIT, public_cards_count = PUBLIC_CARDS_COUNT, 
+	env = TradingGameEnv.TradingGameEnv(player_count = NUM_PLAYERS, other_agent_list = agents,
+		seq_per_day = SEQ_PER_DAY, cards_per_suit = CARDS_PER_SUIT, public_cards_count = PUBLIC_CARDS_COUNT,
 		random_seq = True, self_play = False)
 
 	print("\n Evaluate the result against baseline agent")
