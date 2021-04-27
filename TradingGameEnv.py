@@ -17,13 +17,13 @@ class TradingGameEnv(gym.Env):
 	metadata = {'render.modes': ['human']}
 
 	"""
-	parameters: 
+	parameters:
 		self_play: use self-play training mode. A copy of self policy will be used as the opponent.
 	"""
-	def __init__(self, player_count = 2, suit_count = 1, number_of_sub_piles = 4, other_agent_list = [], 
-		seq_per_day = 1, random_seq = False, cards_per_suit = 13, public_cards_count = 9, extensive_obs = False, 
+	def __init__(self, player_count = 2, suit_count = 1, number_of_sub_piles = 4, other_agent_list = [],
+		seq_per_day = 1, random_seq = False, cards_per_suit = 13, public_cards_count = 9, extensive_obs = False,
 		self_play = False, policy_type = 'MlpPolicy', self_copy_freq = -1):
-		
+
 		super(TradingGameEnv, self).__init__()
 		self.player_count = player_count
 		self.suit_count = suit_count
@@ -36,9 +36,12 @@ class TradingGameEnv(gym.Env):
 		self.turn_sequence = np.arange(0, self.player_count)
 		self.public_cards_count = public_cards_count
 		self.self_play = self_play
-		self.game_count = 0 
+		self.game_count = 0
 		self.games_per_update = int(128/self.seq_per_day/(self.number_of_sub_piles-1)) + 1
-		
+		self.observation_memory = 1
+		self.transaction_history = np.zeros((self.observation_memory, self.player_count, 4))
+		self.transaction_history_size = self.transaction_history.shape[0]*self.transaction_history.shape[1]*self.transaction_history.shape[2]
+
 		# variables for self play training
 		if self_play:
 			self.model_bank = []	# a bank that holds all past selves
@@ -47,14 +50,14 @@ class TradingGameEnv(gym.Env):
 			self.current_opponents_index = [] # index of current opponents in the bank
 			self.self_copy_freq = self_copy_freq # add the current agent to the bank every self_copy_freq updates
 			self.model = None
-			
+
 		if len(self.other_agents) != self.player_count-1:
 			raise Exception("Error: other_agent_list do not conform to the number of players. You may need to add/remove some other agents")
-		
+
 		if self_play and policy_type != 'MlpPolicy':
 			print("self_play policy type ", policy_type, " may not be implemented")
 
-			
+
 		# Actions: buy (1=true), sell, price for buy, price for sell
 		# action: [1, 0, 23, 25]
 		self.action_space =  spaces.MultiDiscrete([2, 2, self.SUIT_SUM, self.SUIT_SUM])
@@ -75,9 +78,13 @@ class TradingGameEnv(gym.Env):
 		# 6 cards for public pile, 3 cards in own hand
 		# [1, 5, 0, 0, 0, 0, 2, 11, 12]
 		#Last numbers are own hand.
-		self.obs_element_count = self.public_cards_count + self.player_hand_count
+		self.obs_element_count = self.public_cards_count + self.player_hand_count + self.transaction_history_size
 		lower = np.zeros(self.obs_element_count, dtype=np.int) #[0 0 0 0 0]
-		upper = np.full(self.obs_element_count, self.cards_per_suit, dtype=np.int)
+		#upper = np.full(self.obs_element_count, self.cards_per_suit, dtype=np.int)
+		upper = np.full(self.obs_element_count, self.SUIT_SUM, dtype=np.int)
+		'''
+		what if they buy more than suit_sum contracts?
+		'''
 		self.observation_space = spaces.Box(lower , upper, dtype=np.int)
 		### TODO: Modify size of obs space.
 
@@ -89,25 +96,25 @@ class TradingGameEnv(gym.Env):
 	def add_past_self(self, model_param):
 		self.model_bank.append(model_param)
 		self.model_qualities.append(1)
-	
+
 	# print params of the policy network
 	def print_self_param(self, key = None):
 		if key != None:
 			print(self.model[key])
 		else:
 			print(self.model)
-	
+
 	# add a reference of the policy model
 	def set_model_reference(self, model):
 		self.model = model
-	
+
 	# init other opponent list
 	def init_self_play_opponents(self):
 		self.other_agents = []
 		# there are player_count - 1 opponents
 		for i in range(self.player_count - 1):
 			self.other_agents.append(PPO2(self.policy_type, self))
-	
+
 	# reset self play opponents every game
 	def reset_self_play_opponents(self):
 		#print(self.game_count)
@@ -116,16 +123,16 @@ class TradingGameEnv(gym.Env):
 			# check if the agent defeats opponents
 			# net_worth = self.balance + self.contract * self.public_pile.sum()
 			...
-			
+
 			# update quality of opponents based upon net worth
 			# if the net worth of opponent is less than the agent, reduce the quality score of the opponent
-		
-		
+
+
 		# add the model itself to the bank every self_copy_freq updates
 		if self.game_count % (self.self_copy_freq*self.games_per_update) == 0:
 			self.add_past_self(self.model)
 			#self.print_self_param(key = 'model/pi/b:0')
-		
+
 		# choose new opponents
 		for i in range(self.player_count-1):
 			if random.random() < 0.8:
@@ -134,28 +141,29 @@ class TradingGameEnv(gym.Env):
 			else:
 				# 20% of time play against random past self
 				self.other_agents[i].load_parameters(self.model_bank[random.randrange(0, len(self.model_bank))])
-		
-		
+
+
 	def reset_model_bank(self):
 		self.game_count = 0
 		self.model_bank = []	# a bank that holds all past selves
 		self.model_qualities = []	# represent the quality of the models in the bank.
 		self.current_opponents_index = [] # index of current opponents in the bank
-	
+
 	def reset(self):
 		# update quality of current opponents and choose new opponents if in self play mode
 		if self.self_play:
 			self.reset_self_play_opponents()
-			
+
 		# Reset the state of the environment to an initial state
 		# the agent is place at AGENT_INDEX = 0 row
 		self.balance = np.full(self.player_count, INITIAL_ACCOUNT_BALANCE, dtype=np.float32) #[agent, other_agent1, other_agent2, ....]
 		self.contract = np.zeros(self.player_count, dtype=np.int)
+		self.transaction_history = np.zeros((self.observation_memory, self.player_count, 4))
 		self.sequence_counter = 1
 		self.day = 1
 		self.total_reward = 0
 		self.game_count += 1
-		
+
 		if self.random_seq:
 			np.random.shuffle(self.turn_sequence)
 
@@ -166,21 +174,21 @@ class TradingGameEnv(gym.Env):
 
 
 		self.public_pile = suit_list[self.player_count * self.player_hand_count:]
-		
-		
+
+
 		self.sell_offer = PriorityQueue()
 		self.buy_offer = PriorityQueue()
 
-			
+
 		return self._next_observation()
 
 	def step(self, action):
-		### TODO: Use data structures to recor transaction history
+		### TODO: Use data structures to record transaction history
 		##
 
-		self.contract_prev = self.contract[AGENT_INDEX] 
+		self.contract_prev = self.contract[AGENT_INDEX]
 		self.balance_prev = self.balance[AGENT_INDEX]
-		
+
 		# take actions based upon turn sequence
 		for i in self.turn_sequence:
 
@@ -188,8 +196,15 @@ class TradingGameEnv(gym.Env):
 			if i != AGENT_INDEX:
 				obs_i = self._next_observation(i)
 				action_i = self.other_agents[i-1].predict(obs_i)
+
 				if self.self_play:
 					action_i = action_i[0]
+				self.transaction_history[0][i] = action_i
+				'''
+				### TODO:
+					(1)Infinite Transaction history, pass last X elements to observation space.
+					(2)Create a Queue for transaction history
+				'''
 				'''
 				actions of agent i takes place here
 				'''
@@ -199,6 +214,7 @@ class TradingGameEnv(gym.Env):
 				# if it is our agent
 
 				# Execute one time step within the environment
+				self.transaction_history[0][i] = action
 				self._take_action(action, AGENT_INDEX)
 
 		'''
@@ -220,11 +236,11 @@ class TradingGameEnv(gym.Env):
 		reward = (expected_value_of_public_pile * self.contract[AGENT_INDEX] +
 							self.balance[AGENT_INDEX] - INITIAL_ACCOUNT_BALANCE)
 		'''
-		
+
 		# give reward based on ground truth for last action only
 		reward = (self.public_pile.sum() * (self.contract[AGENT_INDEX]-self.contract_prev) +
 							(self.balance[AGENT_INDEX]-self.balance_prev))
-							
+
 		# add some panelty if the agent is doing nothing
 		if (action[0] == 0 and action[1] == 0):
 			reward += NO_ACTION_PENALTY
@@ -237,10 +253,10 @@ class TradingGameEnv(gym.Env):
 							self.balance[AGENT_INDEX] - INITIAL_ACCOUNT_BALANCE)*
 							(self.day + 1))
 			reward += final_reward
-		
+
 		self.total_reward += reward
 		"""
-		
+
 		# if it is the last sequence of that day, go to next day
 		if self.sequence_counter == self.seq_per_day:
 			self.day += 1
@@ -277,9 +293,12 @@ class TradingGameEnv(gym.Env):
 		obs[0:revealed_card_index] = self.public_pile[0:revealed_card_index]
 
 		# own hand
-		obs[self.public_cards_count:] = self.hands[agent_index, :]
+		obs[self.public_cards_count:self.public_cards_count + self.transaction_history_size] = self.transaction_history.reshape(-1)
 
-		# return [1, 5, 0, 0, 0, 0, 2, 11, 12]
+
+		obs[self.public_cards_count + self.transaction_history_size:] = self.hands[agent_index, :]
+
+		# return [1, 5, 0, 0, 0, 0,***transaction_history*** ,2, 11, 12]
 		return obs
 
 	def get_next_offer(self, agent, buy):
@@ -312,7 +331,7 @@ class TradingGameEnv(gym.Env):
 	def _take_action(self, action, agent):
 		# action: nparray [buy, sell, buy_price, sell_price]
 		# agent: the index of the agent who wants to take the action
-		
+
 		#print("agent: "+str(agent)+" action: ", str(action))
 		if action[0] == 1:
 			# buy
