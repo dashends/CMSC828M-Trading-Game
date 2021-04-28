@@ -73,7 +73,7 @@ if __name__ == '__main__':
 
 
 
-	num_cpu = 6  # Number of processes to use
+	num_cpu = 8  # Number of processes to use. It is set to 8 to get more out of 8 threads
 	# Create the vectorized environment
 	env = SubprocVecEnv([make_env(i) for i in range(num_cpu)])
 
@@ -92,7 +92,7 @@ if __name__ == '__main__':
 
 
 
-	model.learn(total_timesteps=(int)(1e4), callback=call_back_list)
+	model.learn(total_timesteps=(int)(1e7), callback=call_back_list)
 
 
 	# save final model

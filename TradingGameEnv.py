@@ -12,6 +12,13 @@ INITIAL_ACCOUNT_BALANCE = 10000
 AGENT_INDEX = 0
 NO_ACTION_PENALTY = -5
 
+
+def softmax(arr, axis=None):
+	z = arr - arr.max(axis=axis, keepdims=True)
+	e_z = np.exp(z)
+	return e_z / e_z.sum(axis=axis, keepdims=True)
+	
+	
 class TradingGameEnv(gym.Env):
 	"""A trading game environment for OpenAI gym"""
 	metadata = {'render.modes': ['human']}
@@ -22,7 +29,7 @@ class TradingGameEnv(gym.Env):
 	"""
 	def __init__(self, player_count = 2, suit_count = 1, number_of_sub_piles = 4, other_agent_list = [],
 		seq_per_day = 1, random_seq = False, cards_per_suit = 13, public_cards_count = 9, extensive_obs = False,
-		self_play = False, policy_type = 'MlpPolicy', self_copy_freq = -1):
+		self_play = False, policy_type = 'MlpPolicy', self_copy_freq = -1, model_quality_lr=0.01):
 
 		super(TradingGameEnv, self).__init__()
 		self.player_count = player_count
@@ -45,11 +52,13 @@ class TradingGameEnv(gym.Env):
 		# variables for self play training
 		if self_play:
 			self.model_bank = []	# a bank that holds all past selves
-			self.model_qualities = []	# represent the quality of the models in the bank.
+			self.model_qualities = np.array([], dtype=np.float32)	# represent the quality of the models in the bank.
+			self.model_probabilities = None
 			self.policy_type = policy_type
-			self.current_opponents_index = [] # index of current opponents in the bank
+			self.current_opponents_index = None # index of current opponents in the bank
 			self.self_copy_freq = self_copy_freq # add the current agent to the bank every self_copy_freq updates
 			self.model = None
+			self.model_quality_lr = model_quality_lr
 
 		if len(self.other_agents) != self.player_count-1:
 			raise Exception("Error: other_agent_list do not conform to the number of players. You may need to add/remove some other agents")
@@ -95,7 +104,7 @@ class TradingGameEnv(gym.Env):
 	# initialize the quality of the past self to max quality, i.e. 1
 	def add_past_self(self, model_param):
 		self.model_bank.append(model_param)
-		self.model_qualities.append(1)
+		self.model_qualities = np.append(self.model_qualities, 1)
 
 	# print params of the policy network
 	def print_self_param(self, key = None):
@@ -117,37 +126,58 @@ class TradingGameEnv(gym.Env):
 
 	# reset self play opponents every game
 	def reset_self_play_opponents(self):
-		#print(self.game_count)
-		# if it's not first game
+		# if it's not first game, update opponent model quality after a game (dynamic sampling and evaluation)
 		if self.game_count != 0:
-			# check if the agent defeats opponents
-			# net_worth = self.balance + self.contract * self.public_pile.sum()
-			...
-
-			# update quality of opponents based upon net worth
-			# if the net worth of opponent is less than the agent, reduce the quality score of the opponent
-
+			# check if the agent defeats opponents based upon net worth
+			net_worth = self.balance + self.contract * self.public_pile.sum()
+			# print("net_worth", net_worth)
+			for i in range(len(self.other_agents)):
+				# if the net worth of opponent is less than the agent, reduce the quality score of the opponent
+				if net_worth[AGENT_INDEX] > net_worth[i+1]:
+					# print("win")
+					model_idx = self.current_opponents_index[i]
+					# the amount to reduce = model_quality_lr / (total number of models * probability of choosing this model)
+					self.model_qualities[model_idx] -= self.model_quality_lr/(len(self.model_qualities) * self.model_probabilities[model_idx])
+				
 
 		# add the model itself to the bank every self_copy_freq updates
-		if self.game_count % (self.self_copy_freq*self.games_per_update) == 0:
+		if self.game_count == 0 or self.game_count % (self.self_copy_freq*self.games_per_update) == 0:
 			self.add_past_self(self.model)
 			#self.print_self_param(key = 'model/pi/b:0')
 
 		# choose new opponents
+		self.model_probabilities = softmax(self.model_qualities)
+		self.current_opponents_index = []
+		
 		for i in range(self.player_count-1):
 			if random.random() < 0.8:
 				# 80% of time play against immediate past self
+				self.current_opponents_index = [-1]
 				self.other_agents[i].load_parameters(self.model_bank[-1])
+				self.model_probabilities = softmax(self.model_qualities)
 			else:
 				# 20% of time play against random past self
-				self.other_agents[i].load_parameters(self.model_bank[random.randrange(0, len(self.model_bank))])
-
+				
+				# choose past self based upon quality of the past selves using softmax probability distribution
+				# i.e. a self that has better quality is more likely to get selected
+				chosen_index = np.random.choice(np.arange(len(self.model_bank)), 1, replace=False, p=self.model_probabilities)[0]
+				
+				# save the chosen index and load model
+				self.current_opponents_index.append(chosen_index)
+				self.other_agents[i].load_parameters(self.model_bank[chosen_index])
+				
+		# print("game ", self.game_count)
+		# print("model bank", np.arange(len(self.model_bank)))
+		# print("qualities", self.model_qualities)
+		# print("softmax", self.model_probabilities)
+		# print("idx", self.current_opponents_index, "\n\n")
 
 	def reset_model_bank(self):
 		self.game_count = 0
 		self.model_bank = []	# a bank that holds all past selves
-		self.model_qualities = []	# represent the quality of the models in the bank.
-		self.current_opponents_index = [] # index of current opponents in the bank
+		self.model_qualities = np.array([], dtype=np.float32)	# represent the quality of the models in the bank.
+		self.model_probabilities = None
+		self.current_opponents_index = None # index of current opponents in the bank
 
 	def reset(self):
 		# update quality of current opponents and choose new opponents if in self play mode

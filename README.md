@@ -1,5 +1,12 @@
 # CMSC828M Trading Game
 
+Usage Command: 
+	1. python train.py						#This script trains the agent and saves resulting model as SAVE_NAME.zip. It also saves copies of past models to model_checkpoints folder.
+	2. python load_and_play.py				#This script loads models listed in trained_models and evaluates them against EVAgent
+	
+To get best training speed, it is recommanded to run the script in front (bring focus to the window), because some OS (such as Windows 10) 
+may automatically slow down processes that run in the background.
+
 Done:
 1. Implement the game environment
 	a. init()
@@ -17,7 +24,11 @@ Done:
 6. randomize turn sequence. change at end of each day
 7. implement baseline agents in baseline_agents.py 	(Amir)
 8. implement self-play 
+9. implement dynamic sampling and evaluation for self play
 9. training:  starts with 2 players
+
+
+
 
 
 TODO:
@@ -27,14 +38,15 @@ TODO:
 	c. reward correct?
 	d. result correct?
 3. add obs spaces (Amir)
-
+3. change action space to number of contracts to buy (Da)
+3. train and observe (Da)
 4. self-play training
 3. plot training results (mean rewards vs num of time steps) (DQN vs PPO2) (MLP policy vs. RNN policy etc.), quality scores of past selves
 
 
 4. vec env?
 
-4. dynamic sampling and evaluation for self play
+
 4. randomization to force exploration. e.g. cost multiplier of contracts. Initial states of the but/sell offer markets. 
 	Sufficiently diverse training games are necessary to ensure robustness to the wide variety of strategies and situations that arise in games against human opponents.
 	
