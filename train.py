@@ -12,13 +12,13 @@ from stable_baselines.common.env_checker import check_env
 from stable_baselines.common.vec_env import SubprocVecEnv
 from stable_baselines.common import set_global_seeds, make_vec_env
 
-def make_env(rank, seed=10000):
+def make_env(rank, agents, seed=10000):
 	"""
 	Utility function for multiprocessed env.
 	"""
 	def _init():
 		env = TradingGameEnv.TradingGameEnv(player_count = NUM_PLAYERS, other_agent_list = agents,
-			seq_per_day = SEQ_PER_DAY, cards_per_suit = CARDS_PER_SUIT, public_cards_count = PUBLIC_CARDS_COUNT,
+			seq_per_day = SEQ_PER_DAY, cards_per_suit = CARDS_PER_SUIT, player_hand_count = HAND_COUNT,
 			random_seq = True, self_play = SELF_PLAY, policy_type = POLICY_TYPE, self_copy_freq = SELF_COPY_FREQ)
 		env.seed(seed + rank)
 		return env
@@ -49,9 +49,9 @@ class CustomCallback(BaseCallback):
 
 if __name__ == '__main__':
 	# starts with a simpler version of the game
-	NUM_PLAYERS = 2
+	NUM_PLAYERS = 3
 	SEQ_PER_DAY = 2
-	CARDS_PER_SUIT = 10
+	CARDS_PER_SUIT = 15
 	SUIT_COUNT = 1
 	BETTING_MARGIN = CARDS_PER_SUIT*CARDS_PER_SUIT/100
 	POLICY_TYPE = 'MlpPolicy'
@@ -60,22 +60,22 @@ if __name__ == '__main__':
 	EVAL_FREQ = int(1e5)
 	EVAL_EPISODES = int(1e2)
 	SAVE_NAME = "model_final"
+	num_cpu = 8  # Number of processes to use. It is set to 8 to get more out of 8 threads
+	TRAINING_TIME_STEPS = (int)(1e7)
+	
 
-	hand_count = (int) ((CARDS_PER_SUIT)/2*SUIT_COUNT/NUM_PLAYERS)
+	HAND_COUNT = (int) ((CARDS_PER_SUIT)/1.5*SUIT_COUNT/NUM_PLAYERS)
 
-	PUBLIC_CARDS_COUNT = CARDS_PER_SUIT*SUIT_COUNT - hand_count*NUM_PLAYERS
+	PUBLIC_CARDS_COUNT = CARDS_PER_SUIT*SUIT_COUNT - HAND_COUNT*NUM_PLAYERS
 
 	# add 1 baseline agent
-	agents = [baseline_agents.EVAgent(agent_idx = 1, num_players = NUM_PLAYERS, betting_margin = BETTING_MARGIN, cards_per_suit = CARDS_PER_SUIT, player_hand_count = hand_count, public_cards_count = PUBLIC_CARDS_COUNT)]
-	env = TradingGameEnv.TradingGameEnv(player_count = NUM_PLAYERS, other_agent_list = agents,
-		seq_per_day = SEQ_PER_DAY, cards_per_suit = CARDS_PER_SUIT, public_cards_count = PUBLIC_CARDS_COUNT,
-		random_seq = True, self_play = SELF_PLAY, policy_type = POLICY_TYPE, self_copy_freq = SELF_COPY_FREQ)
+	agents = []
+	agents.append(baseline_agents.EVAgent(agent_idx = 1, num_players = NUM_PLAYERS, betting_margin = BETTING_MARGIN, cards_per_suit = CARDS_PER_SUIT, player_hand_count = HAND_COUNT, public_cards_count = PUBLIC_CARDS_COUNT))
+	agents.append(baseline_agents.EVAgent(agent_idx = 1, num_players = NUM_PLAYERS, betting_margin = BETTING_MARGIN, cards_per_suit = CARDS_PER_SUIT, player_hand_count = HAND_COUNT, public_cards_count = PUBLIC_CARDS_COUNT))
 
 
-
-	num_cpu = 8  # Number of processes to use. It is set to 8 to get more out of 8 threads
-	# Create the vectorized environment
-	env = SubprocVecEnv([make_env(i) for i in range(num_cpu)])
+	# Create the vectorized environment to run multiple game environments in parallel
+	env = SubprocVecEnv([make_env(i, agents) for i in range(num_cpu)])
 
 
 	model = PPO2(POLICY_TYPE, env) # by default n_steps=128, after 128 steps the policy will be updated. If 3 days per game and 2 seq per day, then every update reqires 128/2/3 = 21 games
@@ -92,7 +92,7 @@ if __name__ == '__main__':
 
 
 
-	model.learn(total_timesteps=(int)(1e7), callback=call_back_list)
+	model.learn(total_timesteps=TRAINING_TIME_STEPS, callback=call_back_list)
 
 
 	# save final model
@@ -100,11 +100,8 @@ if __name__ == '__main__':
 
 
 	# Evaluate the result against baseline agent
-
-	# add 1 baseline agent
-	agents = [baseline_agents.EVAgent(agent_idx = 1, num_players = NUM_PLAYERS, betting_margin = BETTING_MARGIN, cards_per_suit = CARDS_PER_SUIT, player_hand_count = hand_count, public_cards_count = PUBLIC_CARDS_COUNT)]
 	env = TradingGameEnv.TradingGameEnv(player_count = NUM_PLAYERS, other_agent_list = agents,
-		seq_per_day = SEQ_PER_DAY, cards_per_suit = CARDS_PER_SUIT, public_cards_count = PUBLIC_CARDS_COUNT,
+		seq_per_day = SEQ_PER_DAY, cards_per_suit = CARDS_PER_SUIT, player_hand_count = HAND_COUNT,
 		random_seq = True, self_play = False)
 
 	print("\n Evaluate the result against baseline agent")

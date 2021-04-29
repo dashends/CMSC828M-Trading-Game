@@ -28,7 +28,7 @@ class TradingGameEnv(gym.Env):
 		self_play: use self-play training mode. A copy of self policy will be used as the opponent.
 	"""
 	def __init__(self, player_count = 2, suit_count = 1, number_of_sub_piles = 4, other_agent_list = [],
-		seq_per_day = 1, random_seq = False, cards_per_suit = 13, public_cards_count = 9, extensive_obs = False,
+		seq_per_day = 1, random_seq = False, cards_per_suit = 13, player_hand_count = 2, extensive_obs = False,
 		self_play = False, policy_type = 'MlpPolicy', self_copy_freq = -1, model_quality_lr=0.01):
 
 		super(TradingGameEnv, self).__init__()
@@ -41,7 +41,9 @@ class TradingGameEnv(gym.Env):
 		self.seq_per_day = seq_per_day
 		self.SUIT_SUM = (1+cards_per_suit)*cards_per_suit/2
 		self.turn_sequence = np.arange(0, self.player_count)
-		self.public_cards_count = public_cards_count
+		# each player is given player_hand_count private cards
+		self.player_hand_count = player_hand_count
+		self.public_cards_count = cards_per_suit*suit_count - player_hand_count*player_count
 		self.self_play = self_play
 		self.game_count = 0
 		self.games_per_update = int(128/self.seq_per_day/(self.number_of_sub_piles-1)) + 1
@@ -70,10 +72,6 @@ class TradingGameEnv(gym.Env):
 		# Actions: buy (1=true), sell, price for buy, price for sell
 		# action: [1, 0, 23, 25]
 		self.action_space =  spaces.MultiDiscrete([2, 2, self.SUIT_SUM, self.SUIT_SUM])
-
-		# about half cards are reserved for the public pile
-		# each player is given player_hand_count private cards
-		self.player_hand_count = (int) ((self.cards_per_suit)/2*self.suit_count/player_count)
 
 
 		# sub-piles
@@ -130,7 +128,7 @@ class TradingGameEnv(gym.Env):
 		if self.game_count != 0:
 			# check if the agent defeats opponents based upon net worth
 			net_worth = self.balance + self.contract * self.public_pile.sum()
-			# print("net_worth", net_worth)
+			#print("net_worth", net_worth)
 			for i in range(len(self.other_agents)):
 				# if the net worth of opponent is less than the agent, reduce the quality score of the opponent
 				if net_worth[AGENT_INDEX] > net_worth[i+1]:
@@ -149,10 +147,11 @@ class TradingGameEnv(gym.Env):
 		self.model_probabilities = softmax(self.model_qualities)
 		self.current_opponents_index = []
 		
+
 		for i in range(self.player_count-1):
 			if random.random() < 0.8:
 				# 80% of time play against immediate past self
-				self.current_opponents_index = [-1]
+				self.current_opponents_index.append(-1)
 				self.other_agents[i].load_parameters(self.model_bank[-1])
 				self.model_probabilities = softmax(self.model_qualities)
 			else:
@@ -165,13 +164,14 @@ class TradingGameEnv(gym.Env):
 				# save the chosen index and load model
 				self.current_opponents_index.append(chosen_index)
 				self.other_agents[i].load_parameters(self.model_bank[chosen_index])
-				
-		# print("game ", self.game_count)
-		# print("model bank", np.arange(len(self.model_bank)))
-		# print("qualities", self.model_qualities)
-		# print("softmax", self.model_probabilities)
-		# print("idx", self.current_opponents_index, "\n\n")
-
+		"""	
+		print("game ", self.game_count)
+		print("model bank", np.arange(len(self.model_bank)))
+		print("qualities", self.model_qualities)
+		print("softmax", self.model_probabilities)
+		print("idx", self.current_opponents_index, "\n\n")
+		"""
+		
 	def reset_model_bank(self):
 		self.game_count = 0
 		self.model_bank = []	# a bank that holds all past selves

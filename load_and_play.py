@@ -11,22 +11,25 @@ from stable_baselines.common.callbacks import CheckpointCallback
 from stable_baselines.common.env_checker import check_env
 
 # we need to use the same settings as the env used in training. Otherwise the agent may be confused.
-NUM_PLAYERS = 2
-SEQ_PER_DAY = 3
-CARDS_PER_SUIT = 10
+NUM_PLAYERS = 3
+SEQ_PER_DAY = 2
+CARDS_PER_SUIT = 15
 SUIT_COUNT = 1
 BETTING_MARGIN = CARDS_PER_SUIT*CARDS_PER_SUIT/100
 EVAL_EPISODES = int(1e3)
 
-hand_count = (int) ((CARDS_PER_SUIT)/2*SUIT_COUNT/NUM_PLAYERS)
+HAND_COUNT = (int) ((CARDS_PER_SUIT)/1.5*SUIT_COUNT/NUM_PLAYERS)
 
-PUBLIC_CARDS_COUNT = CARDS_PER_SUIT*SUIT_COUNT - hand_count*NUM_PLAYERS
+PUBLIC_CARDS_COUNT = CARDS_PER_SUIT*SUIT_COUNT - HAND_COUNT*NUM_PLAYERS
 
-# add 1 baseline agent
-agents = [baseline_agents.EVAgent(agent_idx = 1, num_players = NUM_PLAYERS, betting_margin = BETTING_MARGIN, cards_per_suit = CARDS_PER_SUIT, player_hand_count = hand_count, public_cards_count = PUBLIC_CARDS_COUNT)]
-env = TradingGameEnv.TradingGameEnv(player_count = NUM_PLAYERS, other_agent_list = agents, 
-	seq_per_day = SEQ_PER_DAY, cards_per_suit = CARDS_PER_SUIT, public_cards_count = PUBLIC_CARDS_COUNT, 
-	random_seq = True)
+# add 2 baseline agent
+agents = []
+agents.append(baseline_agents.EVAgent(agent_idx = 1, num_players = NUM_PLAYERS, betting_margin = BETTING_MARGIN, cards_per_suit = CARDS_PER_SUIT, player_hand_count = HAND_COUNT, public_cards_count = PUBLIC_CARDS_COUNT))
+agents.append(baseline_agents.EVAgent(agent_idx = 1, num_players = NUM_PLAYERS, betting_margin = BETTING_MARGIN, cards_per_suit = CARDS_PER_SUIT, player_hand_count = HAND_COUNT, public_cards_count = PUBLIC_CARDS_COUNT))
+
+env = TradingGameEnv.TradingGameEnv(player_count = NUM_PLAYERS, other_agent_list = agents,
+	seq_per_day = SEQ_PER_DAY, cards_per_suit = CARDS_PER_SUIT, player_hand_count = HAND_COUNT,
+	random_seq = True, self_play = False)
 
 
 # load the trained model
@@ -196,6 +199,25 @@ model_checkpoints/rl_model_8800000_steps  mean_reward:  0.147666015625  std_rewa
 model_checkpoints/rl_model_9200000_steps  mean_reward:  0.001662109375  std_reward:  2.3982728670649114
 model_checkpoints/rl_model_9600000_steps  mean_reward:  -1.6861689453125  std_reward:  8.673128540233568
 model_final  											mean_reward:  -4.2816591796875  std_reward:  12.529649336545484
+"""
+
+"""
+3-player game
+
+Training against two EVAgents gives 0. buy at very low and sell at very high
+
+Self-play
+model_checkpoints/rl_model_400000_steps  mean_reward:  -3.783703125  std_reward:  11.518490941838234
+model_checkpoints/rl_model_800000_steps  mean_reward:  -9.218158203125  std_reward:  17.585053665646623
+model_checkpoints/rl_model_1200000_steps  mean_reward:  -1.3338505859375  std_reward:  5.032715236974004
+model_checkpoints/rl_model_1600000_steps  mean_reward:  0.023  std_reward:  0.43642983399396523
+model_checkpoints/rl_model_2000000_steps  mean_reward:  -1.7788505859375  std_reward:  6.893397339900614
+model_checkpoints/rl_model_2400000_steps  mean_reward:  -4.0525517578125  std_reward:  11.46620892738626
+model_checkpoints/rl_model_2800000_steps  mean_reward:  -0.732994140625  std_reward:  6.320214309786262
+model_checkpoints/rl_model_3200000_steps  mean_reward:  -1.1886015625  std_reward:  6.143008714167037
+model_checkpoints/rl_model_3600000_steps  mean_reward:  -0.1315498046875  std_reward:  2.405867831936909
+model_checkpoints/rl_model_4000000_steps  mean_reward:  -0.8916513671875  std_reward:  4.775970532353448
+T
 """
 
 # Playing test rounds

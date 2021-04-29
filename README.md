@@ -44,9 +44,6 @@ TODO:
 3. plot training results (mean rewards vs num of time steps) (DQN vs PPO2) (MLP policy vs. RNN policy etc.), quality scores of past selves
 
 
-4. vec env?
-
-
 4. randomization to force exploration. e.g. cost multiplier of contracts. Initial states of the but/sell offer markets. 
 	Sufficiently diverse training games are necessary to ensure robustness to the wide variety of strategies and situations that arise in games against human opponents.
 	
