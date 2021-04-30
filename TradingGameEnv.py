@@ -38,9 +38,9 @@ class TradingGameEnv(gym.Env):
 		self.self_play = self_play
 		self.game_count = 0
 		self.games_per_update = int(128/self.seq_per_day/(self.number_of_sub_piles-1)) + 1
-		self.observation_memory = 1
+		self.observation_memory = self.seq_per_day*self.number_of_sub_piles
 		self.transaction_history = np.zeros((self.observation_memory, self.player_count, 4))
-		self.transaction_history_size = self.transaction_history.shape[0]*self.transaction_history.shape[1]*self.transaction_history.shape[2]
+		self.transaction_history_size = 100*4
 
 		# variables for self play training
 		if self_play:
@@ -199,7 +199,7 @@ class TradingGameEnv(gym.Env):
 
 				if self.self_play:
 					action_i = action_i[0]
-				self.transaction_history[0][i] = action_i
+				self.transaction_history[(self.day-1)*self.seq_per_day + self.sequence_counter-1][i] = action_i
 				'''
 				### TODO:
 					(1)Infinite Transaction history, pass last X elements to observation space.
@@ -214,7 +214,7 @@ class TradingGameEnv(gym.Env):
 				# if it is our agent
 
 				# Execute one time step within the environment
-				self.transaction_history[0][i] = action
+				self.transaction_history[(self.day-1)*self.seq_per_day + self.sequence_counter-1][i] = action_i
 				self._take_action(action, AGENT_INDEX)
 
 		'''
@@ -293,7 +293,8 @@ class TradingGameEnv(gym.Env):
 		obs[0:revealed_card_index] = self.public_pile[0:revealed_card_index]
 
 		# own hand
-		obs[self.public_cards_count:self.public_cards_count + self.transaction_history_size] = self.transaction_history.reshape(-1)
+		idx = max((self.day-1)*self.seq_per_day + self.sequence_counter-1, self.transaction_history_size/4)
+		obs[self.public_cards_count:self.public_cards_count + self.transaction_history_size] = self.transaction_history[idx-int(self.transaction_history_size/4):idx].reshape(-1)
 
 
 		obs[self.public_cards_count + self.transaction_history_size:] = self.hands[agent_index, :]
