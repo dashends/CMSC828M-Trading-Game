@@ -62,7 +62,7 @@ if __name__ == '__main__':
 	EVAL_EPISODES = int(1e2)
 	SAVE_NAME = "model_final"
 	num_cpu = 8  # Number of processes to use. It is set to 8 to get more out of 8 threads
-	TRAINING_TIME_STEPS = (int)(1e7)
+	TRAINING_TIME_STEPS = (int)(1e6)
 	TRANSACTION_HISTORY_SIZE = 4 # one sequence of transaction. Which is 1*4*3 elements in a 3-player game
 
 	HAND_COUNT = (int) ((CARDS_PER_SUIT)/2*SUIT_COUNT/NUM_PLAYERS)

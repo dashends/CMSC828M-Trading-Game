@@ -123,9 +123,9 @@ model_checkpoints/rl_model_6000000_steps  mean_reward:  -0.478001953125  std_rew
 """
 
 """
-After extending observation space (1 sequence of transaction history)
+After extending observation space 
 
-Trained against the agent
+Trained against the agent (1 sequence of transaction history)
 model_checkpoints/rl_model_400000_steps  mean_reward:  0.0  std_reward:  0.0
 model_checkpoints/rl_model_800000_steps  mean_reward:  0.0  std_reward:  0.0
 model_checkpoints/rl_model_1200000_steps  mean_reward:  1.046673828125  std_reward:  5.151487836224526
@@ -151,7 +151,38 @@ model_checkpoints/rl_model_8800000_steps  mean_reward:  1.477001953125  std_rewa
 model_checkpoints/rl_model_9200000_steps  mean_reward:  4.061322265625  std_reward:  5.500769415491867
 model_checkpoints/rl_model_9600000_steps  mean_reward:  4.144357421875  std_reward:  5.0166000479739505
 
-Self-play:
+
+Trained against the agent (4 sequence of transaction history)
+model_checkpoints/rl_model_400000_steps  mean_reward:  0.0  std_reward:  0.0
+model_checkpoints/rl_model_800000_steps  mean_reward:  1.4834951171875  std_reward:  2.8514683433056756
+model_checkpoints/rl_model_1200000_steps  mean_reward:  1.5771728515625  std_reward:  2.953405263428362
+model_checkpoints/rl_model_1600000_steps  mean_reward:  1.4753349609375  std_reward:  2.77246064665549
+model_checkpoints/rl_model_2000000_steps  mean_reward:  1.7636689453125  std_reward:  2.9797155998822955
+model_checkpoints/rl_model_2400000_steps  mean_reward:  1.763001953125  std_reward:  3.029126158029976
+model_checkpoints/rl_model_2800000_steps  mean_reward:  1.8564990234375  std_reward:  2.9244631005493247
+model_checkpoints/rl_model_3200000_steps  mean_reward:  1.861005859375  std_reward:  3.0274767449837987
+model_checkpoints/rl_model_3600000_steps  mean_reward:  2.767162109375  std_reward:  2.8233649531142744
+model_checkpoints/rl_model_4000000_steps  mean_reward:  2.700990234375  std_reward:  2.7587223981512694
+model_checkpoints/rl_model_4400000_steps  mean_reward:  2.78067578125  std_reward:  2.8477947852586802
+model_checkpoints/rl_model_4800000_steps  mean_reward:  2.8456728515625  std_reward:  2.7701445384202583
+model_checkpoints/rl_model_5200000_steps  mean_reward:  2.7924912109375  std_reward:  2.766952178250764
+model_checkpoints/rl_model_5600000_steps  mean_reward:  2.7128291015625  std_reward:  2.70261801721013
+model_checkpoints/rl_model_6000000_steps  mean_reward:  2.8018203125  std_reward:  2.7795629707226066
+model_checkpoints/rl_model_6400000_steps  mean_reward:  2.7558349609375  std_reward:  2.7410286747454755
+model_checkpoints/rl_model_6800000_steps  mean_reward:  2.7118310546875  std_reward:  2.7424176856956763
+model_checkpoints/rl_model_7200000_steps  mean_reward:  2.7996640625  std_reward:  2.8286492962114695
+model_checkpoints/rl_model_7600000_steps  mean_reward:  2.8924931640625  std_reward:  2.8450188245353334
+model_checkpoints/rl_model_8000000_steps  mean_reward:  2.8210029296875  std_reward:  2.8322221957367373
+model_checkpoints/rl_model_8400000_steps  mean_reward:  2.729853515625  std_reward:  2.7172413186989206
+model_checkpoints/rl_model_8800000_steps  mean_reward:  2.835318359375  std_reward:  2.661514191429318
+model_checkpoints/rl_model_9200000_steps  mean_reward:  2.8795  std_reward:  2.748002449087304
+model_checkpoints/rl_model_9600000_steps  mean_reward:  2.787326171875  std_reward:  2.8221458122133813
+model_final  							  mean_reward:  2.7699921875  std_reward:  2.8420802866919166
+
+
+
+
+Self-play:  (1 sequence of transaction history)
 model_checkpoints/rl_model_400000_steps  mean_reward:  -10.719529296875  std_reward:  20.03518042312496
 model_checkpoints/rl_model_800000_steps  mean_reward:  -3.237669921875  std_reward:  10.373702373389518
 model_checkpoints/rl_model_1200000_steps  mean_reward:  -0.031  std_reward:  7.028261833467808
@@ -174,7 +205,7 @@ model_checkpoints/rl_model_7600000_steps  mean_reward:  -0.2913291015625  std_re
 model_checkpoints/rl_model_8000000_steps  mean_reward:  -0.501181640625  std_reward:  3.920442668616256
 model_checkpoints/rl_model_8400000_steps  mean_reward:  -0.1756640625  std_reward:  2.595466472617155
 
-Self-play with dynamic sampling and evaluation
+Self-play with dynamic sampling and evaluation  (1 sequence of transaction history)
 model_checkpoints/rl_model_400000_steps  mean_reward:  -0.259  std_reward:  1.8583376980516755
 model_checkpoints/rl_model_800000_steps  mean_reward:  -6.236009765625  std_reward:  15.86963226371016
 model_checkpoints/rl_model_1200000_steps  mean_reward:  -1.5373388671875  std_reward:  7.233184256504164
@@ -200,10 +231,25 @@ model_checkpoints/rl_model_8800000_steps  mean_reward:  0.147666015625  std_rewa
 model_checkpoints/rl_model_9200000_steps  mean_reward:  0.001662109375  std_reward:  2.3982728670649114
 model_checkpoints/rl_model_9600000_steps  mean_reward:  -1.6861689453125  std_reward:  8.673128540233568
 model_final  											mean_reward:  -4.2816591796875  std_reward:  12.529649336545484
+
+Self-play with dynamic sampling and evaluation  (4 sequence of transaction history)
+model_checkpoints/rl_model_400000_steps  mean_reward:  -6.910849609375  std_reward:  10.161558508899331
+model_checkpoints/rl_model_800000_steps  mean_reward:  -3.3596669921875  std_reward:  8.400261776773313
+model_checkpoints/rl_model_1200000_steps  mean_reward:  -4.7780009765625  std_reward:  8.235351820512081
+model_checkpoints/rl_model_1600000_steps  mean_reward:  -1.2815126953125  std_reward:  3.3784208458804446
+model_checkpoints/rl_model_2000000_steps  mean_reward:  -1.32816796875  std_reward:  4.375028935152989
+model_checkpoints/rl_model_2400000_steps  mean_reward:  -0.6926591796875  std_reward:  3.155274873918684
+model_checkpoints/rl_model_2800000_steps  mean_reward:  -0.5136552734375  std_reward:  2.728271952812285
+model_checkpoints/rl_model_3200000_steps  mean_reward:  -1.17384375  std_reward:  3.8656040111201997
+model_checkpoints/rl_model_3600000_steps  mean_reward:  -2.70017578125  std_reward:  7.150000204713192
+model_checkpoints/rl_model_4000000_steps  mean_reward:  -2.826337890625  std_reward:  5.607164800092301
+model_checkpoints/rl_model_4400000_steps  mean_reward:  -0.09033984375  std_reward:  1.5254168837818671
+model_checkpoints/rl_model_4800000_steps  mean_reward:  -0.631671875  std_reward:  2.751857169611597
+model_checkpoints/rl_model_5200000_steps  mean_reward:  -0.2225  std_reward:  1.0008714952480164
 """
 
 """
-3-player game
+3-player game  (1 sequence of transaction history)
 
 Training against two EVAgents gives 0. buy at very low and sell at very high
 
