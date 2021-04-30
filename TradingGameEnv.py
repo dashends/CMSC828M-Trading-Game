@@ -33,6 +33,7 @@ class TradingGameEnv(gym.Env):
 		obs_transaction_history_size=1, eval=False):
 	
 		super(TradingGameEnv, self).__init__()
+		self.eval = eval
 		self.player_count = player_count
 		self.suit_count = suit_count
 		self.number_of_sub_piles = number_of_sub_piles
@@ -51,9 +52,11 @@ class TradingGameEnv(gym.Env):
 		self.transaction_memory = self.seq_per_day*self.number_of_sub_piles
 		self.transaction_history = np.zeros((self.transaction_memory, self.player_count, 4))
 		self.obs_transaction_history_size = obs_transaction_history_size 
-
+		self.playing_against_EVAgent = False	# whether it is playing against EV Agent in self-play mode
+		
 		# variables for self play training
 		if self_play:
+			self.EVAgent = other_agent_list 	# EV Agents are stored here in self-play mode
 			self.model_bank = []	# a bank that holds all past selves
 			self.model_qualities = np.array([], dtype=np.float32)	# represent the quality of the models in the bank.
 			self.model_probabilities = None
@@ -126,7 +129,7 @@ class TradingGameEnv(gym.Env):
 	# reset self play opponents every game
 	def reset_self_play_opponents(self):
 		# if it's not first game, update opponent model quality after a game (dynamic sampling and evaluation)
-		if self.game_count != 0:
+		if self.game_count != 0 and not self.playing_against_EVAgent:
 			# check if the agent defeats opponents based upon net worth
 			net_worth = self.balance + self.contract * self.public_pile.sum()
 			#print("net_worth", net_worth)
@@ -147,24 +150,28 @@ class TradingGameEnv(gym.Env):
 		# choose new opponents
 		self.model_probabilities = softmax(self.model_qualities)
 		self.current_opponents_index = []
-		
-
 		for i in range(self.player_count-1):
-			if random.random() < 0.8:
-				# 80% of time play against immediate past self
-				self.current_opponents_index.append(-1)
-				self.other_agents[i].load_parameters(self.model_bank[-1])
-				self.model_probabilities = softmax(self.model_qualities)
+			if random.random() < 0.5:
+				# 50% of time, play against EV Agent
+				self.playing_against_EVAgent = True
 			else:
-				# 20% of time play against random past self
-				
-				# choose past self based upon quality of the past selves using softmax probability distribution
-				# i.e. a self that has better quality is more likely to get selected
-				chosen_index = np.random.choice(np.arange(len(self.model_bank)), 1, replace=False, p=self.model_probabilities)[0]
-				
-				# save the chosen index and load model
-				self.current_opponents_index.append(chosen_index)
-				self.other_agents[i].load_parameters(self.model_bank[chosen_index])
+				# 50% of time, self-play
+				self.playing_against_EVAgent = False
+				if random.random() < 0.8:
+					# 80% of time play against immediate past self
+					self.current_opponents_index.append(-1)
+					self.other_agents[i].load_parameters(self.model_bank[-1])
+					self.model_probabilities = softmax(self.model_qualities)
+				else:
+					# 20% of time play against random past self
+					
+					# choose past self based upon quality of the past selves using softmax probability distribution
+					# i.e. a self that has better quality is more likely to get selected
+					chosen_index = np.random.choice(np.arange(len(self.model_bank)), 1, replace=False, p=self.model_probabilities)[0]
+					
+					# save the chosen index and load model
+					self.current_opponents_index.append(chosen_index)
+					self.other_agents[i].load_parameters(self.model_bank[chosen_index])
 		"""	
 		print("game ", self.game_count)
 		print("model bank", np.arange(len(self.model_bank)))
@@ -227,10 +234,10 @@ class TradingGameEnv(gym.Env):
 			if i != AGENT_INDEX:
 				obs_i = self._next_observation(i)
 				action_i = self.other_agents[i-1].predict(obs_i)
-
-				if self.self_play:
+				if self.self_play and not self.playing_against_EVAgent:
 					action_i = action_i[0]
-				
+				elif self.playing_against_EVAgent:
+					action_i = self.EVAgent[i-1].predict(obs_i)
 				self.transaction_history[(self.day-1)*self.seq_per_day + self.sequence_counter-1][i] = action_i
 				'''
 				### TODO:
@@ -247,7 +254,7 @@ class TradingGameEnv(gym.Env):
 
 				# Execute one time step within the environment
 				self.transaction_history[(self.day-1)*self.seq_per_day + self.sequence_counter-1][i] = action
-				self._take_action(action, AGENT_INDEX)
+				self._take_action(action, i)
 
 		'''
 		# compute reward
@@ -273,7 +280,7 @@ class TradingGameEnv(gym.Env):
 		reward = (self.public_pile.sum() * (self.contract[AGENT_INDEX]-self.contract_prev) +
 							(self.balance[AGENT_INDEX]-self.balance_prev))
 
-		if not eval:
+		if not self.eval:
 			# add some panelty if the agent is doing nothing
 			if (action[0] == 0 and action[1] == 0):
 				reward += NO_ACTION_PENALTY

@@ -57,7 +57,7 @@ if __name__ == '__main__':
 	BETTING_MARGIN = CARDS_PER_SUIT*CARDS_PER_SUIT/100
 	POLICY_TYPE = 'MlpPolicy'
 	SELF_COPY_FREQ = 10 # copy the agent itself to past selves bank every 10 policy updates
-	SELF_PLAY = False
+	SELF_PLAY = True
 	EVAL_FREQ = int(1e5)
 	EVAL_EPISODES = int(1e2)
 	SAVE_NAME = "model_final"
@@ -103,7 +103,8 @@ if __name__ == '__main__':
 	# Evaluate the result against baseline agent
 	env = TradingGameEnv.TradingGameEnv(player_count = NUM_PLAYERS, other_agent_list = agents,
 		seq_per_day = SEQ_PER_DAY, cards_per_suit = CARDS_PER_SUIT, player_hand_count = HAND_COUNT,
-		random_seq = True, self_play = False, obs_transaction_history_size=TRANSACTION_HISTORY_SIZE)
+		random_seq = True, self_play = False, obs_transaction_history_size=TRANSACTION_HISTORY_SIZE,
+		eval=True)
 
 	print("\n Evaluate the result against baseline agent")
 	mean_reward, std_reward = evaluate_policy(model, env, n_eval_episodes=EVAL_EPISODES)
