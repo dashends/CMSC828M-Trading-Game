@@ -29,7 +29,8 @@ class TradingGameEnv(gym.Env):
 	"""
 	def __init__(self, player_count = 2, suit_count = 1, number_of_sub_piles = 4, other_agent_list = [],
 		seq_per_day = 1, random_seq = False, cards_per_suit = 13, player_hand_count = 2, extensive_obs = False,
-		self_play = False, policy_type = 'MlpPolicy', self_copy_freq = -1, model_quality_lr=0.01):
+		self_play = False, policy_type = 'MlpPolicy', self_copy_freq = -1, model_quality_lr=0.01, 
+		obs_transaction_history_size=1):
 
 		super(TradingGameEnv, self).__init__()
 		self.player_count = player_count
@@ -47,9 +48,9 @@ class TradingGameEnv(gym.Env):
 		self.self_play = self_play
 		self.game_count = 0
 		self.games_per_update = int(128/self.seq_per_day/(self.number_of_sub_piles-1)) + 1
-		self.observation_memory = self.seq_per_day*self.number_of_sub_piles
-		self.transaction_history = np.zeros((self.observation_memory, self.player_count, 4))
-		self.transaction_history_size = 100*4
+		self.transaction_memory = self.seq_per_day*self.number_of_sub_piles
+		self.transaction_history = np.zeros((self.transaction_memory, self.player_count, 4))
+		self.obs_transaction_history_size = obs_transaction_history_size 
 
 		# variables for self play training
 		if self_play:
@@ -85,7 +86,7 @@ class TradingGameEnv(gym.Env):
 		# 6 cards for public pile, 3 cards in own hand
 		# [1, 5, 0, 0, 0, 0, 2, 11, 12]
 		#Last numbers are own hand.
-		self.obs_element_count = self.public_cards_count + self.player_hand_count + self.transaction_history_size
+		self.obs_element_count = self.public_cards_count + self.player_hand_count + self.obs_transaction_history_size*4*self.player_count
 		lower = np.zeros(self.obs_element_count, dtype=np.int) #[0 0 0 0 0]
 		#upper = np.full(self.obs_element_count, self.cards_per_suit, dtype=np.int)
 		upper = np.full(self.obs_element_count, self.SUIT_SUM, dtype=np.int)
@@ -188,7 +189,7 @@ class TradingGameEnv(gym.Env):
 		# the agent is place at AGENT_INDEX = 0 row
 		self.balance = np.full(self.player_count, INITIAL_ACCOUNT_BALANCE, dtype=np.float32) #[agent, other_agent1, other_agent2, ....]
 		self.contract = np.zeros(self.player_count, dtype=np.int)
-		self.transaction_history = np.zeros((self.observation_memory, self.player_count, 4))
+		self.transaction_history = np.zeros((self.transaction_memory, self.player_count, 4))
 		self.sequence_counter = 1
 		self.day = 1
 		self.total_reward = 0
@@ -229,6 +230,7 @@ class TradingGameEnv(gym.Env):
 
 				if self.self_play:
 					action_i = action_i[0]
+				
 				self.transaction_history[(self.day-1)*self.seq_per_day + self.sequence_counter-1][i] = action_i
 				'''
 				### TODO:
@@ -244,7 +246,7 @@ class TradingGameEnv(gym.Env):
 				# if it is our agent
 
 				# Execute one time step within the environment
-				self.transaction_history[(self.day-1)*self.seq_per_day + self.sequence_counter-1][i] = action_i
+				self.transaction_history[(self.day-1)*self.seq_per_day + self.sequence_counter-1][i] = action
 				self._take_action(action, AGENT_INDEX)
 
 		'''
@@ -323,11 +325,11 @@ class TradingGameEnv(gym.Env):
 		obs[0:revealed_card_index] = self.public_pile[0:revealed_card_index]
 
 		# own hand
-		idx = max((self.day-1)*self.seq_per_day + self.sequence_counter-1, self.transaction_history_size/4)
-		obs[self.public_cards_count:self.public_cards_count + self.transaction_history_size] = self.transaction_history[idx-int(self.transaction_history_size/4):idx].reshape(-1)
+		idx = max((self.day-1)*self.seq_per_day + self.sequence_counter-1, int(self.obs_transaction_history_size))
+		obs[self.public_cards_count:self.public_cards_count + self.obs_transaction_history_size*4*self.player_count] = self.transaction_history[idx-int(self.obs_transaction_history_size):idx].reshape(-1)
 
 
-		obs[self.public_cards_count + self.transaction_history_size:] = self.hands[agent_index, :]
+		obs[-self.player_hand_count:] = self.hands[agent_index, :]
 
 		# return [1, 5, 0, 0, 0, 0,***transaction_history*** ,2, 11, 12]
 		return obs

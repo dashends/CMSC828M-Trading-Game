@@ -42,7 +42,7 @@ TODO:
 3. train and observe (Da)
 4. self-play training
 3. plot training results (mean rewards vs num of time steps) (DQN vs PPO2) (MLP policy vs. RNN policy etc.), quality scores of past selves
-
+3. add baseline agent to opponent list
 
 4. randomization to force exploration. e.g. cost multiplier of contracts. Initial states of the but/sell offer markets. 
 	Sufficiently diverse training games are necessary to ensure robustness to the wide variety of strategies and situations that arise in games against human opponents.
