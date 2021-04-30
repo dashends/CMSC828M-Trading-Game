@@ -30,7 +30,7 @@ class TradingGameEnv(gym.Env):
 	def __init__(self, player_count = 2, suit_count = 1, number_of_sub_piles = 4, other_agent_list = [],
 		seq_per_day = 1, random_seq = False, cards_per_suit = 13, player_hand_count = 2, extensive_obs = False,
 		self_play = False, policy_type = 'MlpPolicy', self_copy_freq = -1, model_quality_lr=0.01, 
-		obs_transaction_history_size=1):
+		obs_transaction_history_size=1, eval=False):
 	
 		super(TradingGameEnv, self).__init__()
 		self.player_count = player_count
@@ -273,19 +273,20 @@ class TradingGameEnv(gym.Env):
 		reward = (self.public_pile.sum() * (self.contract[AGENT_INDEX]-self.contract_prev) +
 							(self.balance[AGENT_INDEX]-self.balance_prev))
 
-		# add some panelty if the agent is doing nothing
-		if (action[0] == 0 and action[1] == 0):
-			reward += NO_ACTION_PENALTY
-		elif (action[0] != 0 and action[1] != 0):
-			reward -= max(action[2] - action[3], 0)*0.01
-			# penalize spread
-			reward -= abs(action[3] - action[2])*0.01
-		elif (action[0] != 0 and action[1] == 0):
-			# only buy
-			reward -= abs(action[2] - self.public_pile.sum()) * 0.01
-		else:
-			# only sell
-			reward -= abs(action[3] - self.public_pile.sum()) * 0.01
+		if not eval:
+			# add some panelty if the agent is doing nothing
+			if (action[0] == 0 and action[1] == 0):
+				reward += NO_ACTION_PENALTY
+			elif (action[0] != 0 and action[1] != 0):
+				reward -= max(action[2] - action[3], 0)*0.01
+				# penalize spread
+				reward -= abs(action[3] - action[2])*0.01
+			elif (action[0] != 0 and action[1] == 0):
+				# only buy
+				reward -= abs(action[2] - self.public_pile.sum()) * 0.01
+			else:
+				# only sell
+				reward -= abs(action[3] - self.public_pile.sum()) * 0.01
 		
 		
 
