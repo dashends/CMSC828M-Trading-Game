@@ -6,11 +6,34 @@ import random
 import math
 from queue import PriorityQueue
 from stable_baselines import PPO2
-
+from stable_baselines.common.policies import FeedForwardPolicy, register_policy
+import tensorflow as tf
 
 INITIAL_ACCOUNT_BALANCE = 10000
 AGENT_INDEX = 0
 NO_ACTION_PENALTY = -5
+
+# Custom MLP policy of three layers of size 128 each
+class MlpPolicy128(FeedForwardPolicy):
+	def __init__(self, *args, **kwargs):
+		super(MlpPolicy128, self).__init__(*args, **kwargs,
+										   net_arch=[dict(pi=[128, 128, 128],
+														  vf=[128, 128, 128])],
+										   feature_extraction="mlp")
+# Register the policy, it will check that the name is not already taken
+register_policy('MlpPolicy128', MlpPolicy128)
+
+
+# Custom MLP policy using relu
+class MlpPolicyReLU(FeedForwardPolicy):
+	def __init__(self, *args, **kwargs):
+		super(MlpPolicyReLU, self).__init__(*args, **kwargs,
+											net_arch=[dict(pi=[64,64],
+														  vf=[64,64])],
+											act_fun=tf.nn.relu,
+											feature_extraction="mlp")
+# Register the policy, it will check that the name is not already taken
+register_policy('MlpPolicyReLU', MlpPolicyReLU)
 
 
 def softmax(arr, axis=None):
@@ -29,8 +52,8 @@ class TradingGameEnv(gym.Env):
 	"""
 	def __init__(self, player_count = 2, suit_count = 1, number_of_sub_piles = 4, other_agent_list = [],
 		seq_per_day = 1, random_seq = False, cards_per_suit = 13, player_hand_count = 2, extensive_obs = False,
-		self_play = False, policy_type = 'MlpPolicy', self_copy_freq = -1, model_quality_lr=0.01, 
-		obs_transaction_history_size=1, eval=False):
+		self_play = False, policy_type = 'MlpPolicy', self_copy_freq = 10, model_quality_lr=0.01, 
+		obs_transaction_history_size=1, eval=False, model_bank_size = 1000, n_steps=128):
 	
 		super(TradingGameEnv, self).__init__()
 		self.eval = eval
@@ -48,11 +71,12 @@ class TradingGameEnv(gym.Env):
 		self.public_cards_count = cards_per_suit*suit_count - player_hand_count*player_count
 		self.self_play = self_play
 		self.game_count = 0
-		self.games_per_update = int(128/self.seq_per_day/(self.number_of_sub_piles-1)) + 1
+		self.games_per_update = int(n_steps/self.seq_per_day/(self.number_of_sub_piles-1)) + 1
 		self.transaction_memory = self.seq_per_day*self.number_of_sub_piles
 		self.transaction_history = np.zeros((self.transaction_memory, self.player_count, 4))
 		self.obs_transaction_history_size = obs_transaction_history_size 
 		self.playing_against_EVAgent = False	# whether it is playing against EV Agent in self-play mode
+		self.n_steps = n_steps
 		
 		# variables for self play training
 		if self_play:
@@ -65,6 +89,7 @@ class TradingGameEnv(gym.Env):
 			self.self_copy_freq = self_copy_freq # add the current agent to the bank every self_copy_freq updates
 			self.model = None
 			self.model_quality_lr = model_quality_lr
+			self.model_bank_size = model_bank_size
 
 		if len(self.other_agents) != self.player_count-1:
 			raise Exception("Error: other_agent_list do not conform to the number of players. You may need to add/remove some other agents")
@@ -136,25 +161,33 @@ class TradingGameEnv(gym.Env):
 			for i in range(len(self.other_agents)):
 				# if the net worth of opponent is less than the agent, reduce the quality score of the opponent
 				if net_worth[AGENT_INDEX] > net_worth[i+1]:
-					# print("win")
+					# print("win", self.current_opponents_index, i)
 					model_idx = self.current_opponents_index[i]
 					# the amount to reduce = model_quality_lr / (total number of models * probability of choosing this model)
 					self.model_qualities[model_idx] -= self.model_quality_lr/(len(self.model_qualities) * self.model_probabilities[model_idx])
-				
 
+					
 		# add the model itself to the bank every self_copy_freq updates
 		if self.game_count == 0 or self.game_count % (self.self_copy_freq*self.games_per_update) == 0:
 			self.add_past_self(self.model)
 			#self.print_self_param(key = 'model/pi/b:0')
 
+		# drop bad models if there are too many models
+		if len(self.model_qualities) > 2 * self.model_bank_size:
+			smallest_idx = np.argpartition(self.model_qualities, len(self.model_qualities) - self.model_bank_size)[0:len(self.model_qualities) - self.model_bank_size]
+			self.model_qualities = np.delete(self.model_qualities, smallest_idx)
+			for i in sorted(smallest_idx, reverse=True):
+				del(self.model_bank[i])
+
+			
 		# choose new opponents
 		self.model_probabilities = softmax(self.model_qualities)
 		self.current_opponents_index = []
-		for i in range(self.player_count-1):
-			if random.random() < 0.5:
-				# 50% of time, play against EV Agent
-				self.playing_against_EVAgent = True
-			else:
+		if random.random() < 0.2:
+			# 50% of time, play against EV Agent
+			self.playing_against_EVAgent = True
+		else:
+			for i in range(self.player_count-1):
 				# 50% of time, self-play
 				self.playing_against_EVAgent = False
 				if random.random() < 0.8:
@@ -284,16 +317,16 @@ class TradingGameEnv(gym.Env):
 			# add some panelty if the agent is doing nothing
 			if (action[0] == 0 and action[1] == 0):
 				reward += NO_ACTION_PENALTY
-			elif (action[0] != 0 and action[1] != 0):
-				reward -= max(action[2] - action[3], 0)*0.01
-				# penalize spread
-				reward -= abs(action[3] - action[2])*0.01
-			elif (action[0] != 0 and action[1] == 0):
-				# only buy
-				reward -= abs(action[2] - self.public_pile.sum()) * 0.01
-			else:
-				# only sell
-				reward -= abs(action[3] - self.public_pile.sum()) * 0.01
+			#elif (action[0] != 0 and action[1] != 0):
+			#	reward -= max(action[2] - action[3], 0)*0.01
+			#	# penalize spread
+			#	reward -= abs(action[3] - action[2])*0.01
+			#elif (action[0] != 0 and action[1] == 0):
+			#	# only buy
+			#	reward -= abs(action[2] - self.public_pile.sum()) * 0.01
+			#else:
+			#	# only sell
+			#	reward -= abs(action[3] - self.public_pile.sum()) * 0.01
 		
 		
 

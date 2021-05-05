@@ -1,0 +1,2 @@
+mean reward: 0.0	std reward: 0.0
+{'n_steps': 208, 'gamma': 0.968981536151347, 'learning_rate': 0.00028643064453291397, 'ent_coef': 1.0668935309938805e-08, 'cliprange': 0.3711453587818729, 'noptepochs': 27, 'lam': 0.8042722228432545}

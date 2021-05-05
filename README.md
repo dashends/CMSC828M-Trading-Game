@@ -15,6 +15,7 @@ Done:
 	d. render()
 	e. next_observation
 	f. take_action
+1. test the environment (testing starter code in main.py)
 2. [1,1,100,10] should post two offers. also disallow self trading
 3. implement more suits
 4. change card numbers to a parameter to constructor
@@ -26,29 +27,28 @@ Done:
 8. implement self-play 
 9. implement dynamic sampling and evaluation for self play
 9. training:  starts with 2 players
-
-
+10. extend obs spaces (Amir)
+11. add baseline agent to opponent list
+12. remove bad models from model bank
 
 
 
 TODO:
-1. test the environment (testing starter code in main.py)
-	a. obs correct?
-	b. actions correct?
-	c. reward correct?
-	d. result correct?
-3. add obs spaces (Amir)
-3. change action space to number of contracts to buy (Da)
-3. train and observe (Da)
-4. self-play training
-3. plot training results (mean rewards vs num of time steps) (DQN vs PPO2) (MLP policy vs. RNN policy etc.), quality scores of past selves
-3. add baseline agent to opponent list
 
-4. randomization to force exploration. e.g. cost multiplier of contracts. Initial states of the but/sell offer markets. 
+3.  add penalty for rediculously high/low price for some margins
+	large spread
+3. custom policy network  https://stable-baselines.readthedocs.io/en/master/guide/custom_policy.html
+	64*64 might be the best https://arxiv.org/abs/1709.06560
+3. change action space to number of contracts to buy
+3. train and observe 
+4. randomization to force exploration. e.g. cost multiplier of contracts. Initial states of the buy/sell offer markets. 
 	Sufficiently diverse training games are necessary to ensure robustness to the wide variety of strategies and situations that arise in games against human opponents.
+
+	
+3. plot training results (mean rewards vs num of time steps) (DQN vs PPO2) (MLP policy vs. RNN policy etc.), quality scores of past selves
+
 	
 5. playing against the agent
-6. how to let the agent scale to different setups of the game env? For example, play against 3 players with 4 suits and then 4 players with 2 suits?
 7. for continuous spaces, normalize observation/action space if possible (A good practice is to rescale your actions to lie in [-1, 1])
 
 
