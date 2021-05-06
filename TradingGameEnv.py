@@ -35,6 +35,16 @@ class MlpPolicyReLU(FeedForwardPolicy):
 # Register the policy, it will check that the name is not already taken
 register_policy('MlpPolicyReLU', MlpPolicyReLU)
 
+# Custom MLP policy using relu
+class MlpPolicyReLU128(FeedForwardPolicy):
+	def __init__(self, *args, **kwargs):
+		super(MlpPolicyReLU128, self).__init__(*args, **kwargs,
+											net_arch=[dict(pi=[128,128],
+														  vf=[128,128])],
+											act_fun=tf.nn.relu,
+											feature_extraction="mlp")
+# Register the policy, it will check that the name is not already taken
+register_policy('MlpPolicyReLU128', MlpPolicyReLU128)
 
 def softmax(arr, axis=None):
 	z = arr - arr.max(axis=axis, keepdims=True)

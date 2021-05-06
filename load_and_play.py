@@ -767,6 +767,65 @@ model_checkpoints/rl_model_123600000_steps.zip  mean_reward:  3.772501953125  st
 model_checkpoints/rl_model_124000000_steps.zip  mean_reward:  3.931826171875  std_reward:  4.298827593447814
 model_checkpoints/rl_model_124400000_steps.zip  mean_reward:  3.7238408203125  std_reward:  4.2101842499270745
 model_checkpoints/rl_model_124800000_steps.zip  mean_reward:  4.1441767578125  std_reward:  4.6573355730829
+
+Self-play with dynamic sampling and evaluation  (4 sequence of transaction history) 20% EV Agent, reward not modified
+	MLPPolicy ReLU 
+	{'n_steps': int(1403/num_cpu), 'gamma': 0.9378697782327615, 'learning_rate': 0.0002743310803336785, 'ent_coef': 2.2312682753757416e-05, 'cliprange': 0.12718794371596698, 'noptepochs': 32, 'lam': 0.894837193141085}
+model_checkpoints/rl_model_400000_steps  mean_reward:  2.5021611328125  std_reward:  3.6106318059934046
+model_checkpoints/rl_model_800000_steps  mean_reward:  2.892177734375  std_reward:  3.535993933725871
+model_checkpoints/rl_model_1200000_steps  mean_reward:  2.942  std_reward:  3.5407331922299594
+model_checkpoints/rl_model_1600000_steps  mean_reward:  2.8421669921875  std_reward:  3.92013149281287
+model_checkpoints/rl_model_2000000_steps  mean_reward:  2.9040029296875  std_reward:  3.871308573056966
+model_checkpoints/rl_model_2400000_steps  mean_reward:  2.949333984375  std_reward:  3.4587088559603147
+model_checkpoints/rl_model_2800000_steps  mean_reward:  2.8878427734375  std_reward:  3.682000063557782
+model_checkpoints/rl_model_3200000_steps  mean_reward:  3.10400390625  std_reward:  3.498395011204273
+model_checkpoints/rl_model_3600000_steps  mean_reward:  2.5355048828125  std_reward:  3.5785879536343144
+model_checkpoints/rl_model_4000000_steps  mean_reward:  2.681666015625  std_reward:  4.042919826909518
+model_checkpoints/rl_model_4400000_steps  mean_reward:  2.8643310546875  std_reward:  3.529380330841189
+model_checkpoints/rl_model_4800000_steps  mean_reward:  3.2118427734375  std_reward:  3.5458449861913865
+model_checkpoints/rl_model_5200000_steps  mean_reward:  3.2191708984375  std_reward:  3.4429521275729873
+model_checkpoints/rl_model_5600000_steps  mean_reward:  2.756166015625  std_reward:  3.6145118556601936
+model_checkpoints/rl_model_6000000_steps  mean_reward:  3.2500029296875  std_reward:  3.7305675467773507
+model_checkpoints/rl_model_6400000_steps  mean_reward:  2.93801171875  std_reward:  4.08225859506153
+model_checkpoints/rl_model_6800000_steps  mean_reward:  3.0634990234375  std_reward:  3.549050167038598
+model_checkpoints/rl_model_7200000_steps  mean_reward:  3.1073349609375  std_reward:  3.7147299968360112
+model_checkpoints/rl_model_7600000_steps  mean_reward:  3.2938359375  std_reward:  3.396680653822242
+model_checkpoints/rl_model_8000000_steps  mean_reward:  3.2373369140625  std_reward:  3.7301932236671465
+model_checkpoints/rl_model_8400000_steps  mean_reward:  3.018162109375  std_reward:  3.8863752930550177
+model_checkpoints/rl_model_8800000_steps  mean_reward:  2.909326171875  std_reward:  4.410856842644057
+model_checkpoints/rl_model_9200000_steps  mean_reward:  3.0153369140625  std_reward:  5.124208608045864
+model_checkpoints/rl_model_9600000_steps  mean_reward:  3.28233203125  std_reward:  3.571223259731399
+model_final  							  mean_reward:  3.1856591796875  std_reward:  3.3002476015221656
+
+
+Self-play with dynamic sampling and evaluation  (4 sequence of transaction history) 20% EV Agent, reward not modified
+	MLPPolicy ReLU 128*128
+	{'n_steps': int(1403/num_cpu), 'gamma': 0.9378697782327615, 'learning_rate': 0.0002743310803336785, 'ent_coef': 2.2312682753757416e-05, 'cliprange': 0.12718794371596698, 'noptepochs': 32, 'lam': 0.894837193141085}
+model_checkpoints/rl_model_400000_steps  mean_reward:  2.742830078125  std_reward:  3.5681005521015923
+model_checkpoints/rl_model_800000_steps  mean_reward:  3.1333447265625  std_reward:  3.448933202859166
+model_checkpoints/rl_model_1200000_steps  mean_reward:  3.0180078125  std_reward:  3.700037226670092
+model_checkpoints/rl_model_1600000_steps  mean_reward:  2.8966591796875  std_reward:  4.201451594656552
+model_checkpoints/rl_model_2000000_steps  mean_reward:  3.1150029296875  std_reward:  3.8020781783322994
+model_checkpoints/rl_model_2400000_steps  mean_reward:  2.914998046875  std_reward:  4.009612849545857
+model_checkpoints/rl_model_2800000_steps  mean_reward:  2.9774990234375  std_reward:  3.409569077226671
+model_checkpoints/rl_model_3200000_steps  mean_reward:  3.2294833984375  std_reward:  3.4276922847474505
+model_checkpoints/rl_model_3600000_steps  mean_reward:  3.0506611328125  std_reward:  3.678065971201744
+model_checkpoints/rl_model_4000000_steps  mean_reward:  2.8353408203125  std_reward:  4.05040384465279
+model_checkpoints/rl_model_4400000_steps  mean_reward:  2.5139990234375  std_reward:  3.8627989533878666
+model_checkpoints/rl_model_4800000_steps  mean_reward:  2.9793193359375  std_reward:  3.494677810672023
+model_checkpoints/rl_model_5200000_steps  mean_reward:  3.0270068359375  std_reward:  3.7213942461148135
+model_checkpoints/rl_model_5600000_steps  mean_reward:  3.173658203125  std_reward:  3.330593893017052
+model_checkpoints/rl_model_6000000_steps  mean_reward:  3.0120048828125  std_reward:  4.101253728978358
+model_checkpoints/rl_model_6400000_steps  mean_reward:  3.0335029296875  std_reward:  3.7417521562383387
+model_checkpoints/rl_model_6800000_steps  mean_reward:  3.125166015625  std_reward:  3.8675888151809565
+model_checkpoints/rl_model_7200000_steps  mean_reward:  2.874337890625  std_reward:  4.46905533803189
+model_checkpoints/rl_model_7600000_steps  mean_reward:  3.119662109375  std_reward:  3.8015591294987012
+model_checkpoints/rl_model_8000000_steps  mean_reward:  3.4876787109375  std_reward:  3.725988787339719
+model_checkpoints/rl_model_8400000_steps  mean_reward:  3.142994140625  std_reward:  3.7321642240998028
+model_checkpoints/rl_model_8800000_steps  mean_reward:  3.2761669921875  std_reward:  3.713701795135469
+model_checkpoints/rl_model_9200000_steps  mean_reward:  3.02399609375  std_reward:  4.134872704915855
+model_checkpoints/rl_model_9600000_steps  mean_reward:  3.1025087890625  std_reward:  3.9617289883951936
+model_final  							  mean_reward:  3.26715625  std_reward:  4.074580248806524
 """
 
 """

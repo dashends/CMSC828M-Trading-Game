@@ -55,7 +55,7 @@ if __name__ == '__main__':
 	CARDS_PER_SUIT = 10
 	SUIT_COUNT = 1
 	BETTING_MARGIN = CARDS_PER_SUIT*CARDS_PER_SUIT/100
-	POLICY_TYPE = 'MlpPolicyReLU'
+	POLICY_TYPE = 'MlpPolicyReLU128'
 	SELF_COPY_FREQ = 10 # copy the agent itself to past selves bank every 10 policy updates
 	SELF_PLAY = True
 	EVAL_FREQ = int(1e5)
