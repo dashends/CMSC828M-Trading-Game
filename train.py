@@ -69,13 +69,13 @@ if __name__ == '__main__':
 
 	PUBLIC_CARDS_COUNT = CARDS_PER_SUIT*SUIT_COUNT - HAND_COUNT*NUM_PLAYERS
 
-	model_params = {'n_steps': int(1403/num_cpu), 'gamma': 0.9378697782327615, 'learning_rate': 0.0002743310803336785, 'ent_coef': 2.2312682753757416e-05, 'cliprange': 0.12718794371596698, 'noptepochs': 32, 'lam': 0.894837193141085}
+	model_params = {'n_steps': int(1400/num_cpu), 'gamma': 0.9378697782327615, 'learning_rate': 0.0002743310803336785, 'ent_coef': 2.2312682753757416e-05, 'cliprange': 0.12718794371596698, 'noptepochs': 32, 'lam': 0.894837193141085}
 	N_STEPS = model_params['n_steps']
 	
 	# add 1 baseline agent
 	agents = []
 	agents.append(baseline_agents.EVAgent(agent_idx = 1, num_players = NUM_PLAYERS, betting_margin = BETTING_MARGIN, cards_per_suit = CARDS_PER_SUIT, player_hand_count = HAND_COUNT, public_cards_count = PUBLIC_CARDS_COUNT))
-	#agents.append(baseline_agents.EVAgent(agent_idx = 1, num_players = NUM_PLAYERS, betting_margin = BETTING_MARGIN, cards_per_suit = CARDS_PER_SUIT, player_hand_count = HAND_COUNT, public_cards_count = PUBLIC_CARDS_COUNT))
+	agents.append(baseline_agents.EVAgent(agent_idx = 1, num_players = NUM_PLAYERS, betting_margin = BETTING_MARGIN, cards_per_suit = CARDS_PER_SUIT, player_hand_count = HAND_COUNT, public_cards_count = PUBLIC_CARDS_COUNT))
 
 
 	# Create the vectorized environment to run multiple game environments in parallel
@@ -95,7 +95,7 @@ if __name__ == '__main__':
 	# save a copy of model every 5e4*num_cpu games
 	copy_call_back = CustomCallback(model)
 	call_back_list = [CheckpointCallback(save_freq=int(5e4), save_path='./model_checkpoints/'), 
-		EveryNTimesteps(n_steps=N_STEPS*10*num_cpu, callback=copy_call_back)]
+		EveryNTimesteps(n_steps=N_STEPS*SELF_COPY_FREQ*num_cpu, callback=copy_call_back)]
 
 
 

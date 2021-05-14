@@ -318,10 +318,10 @@ class TradingGameEnv(gym.Env):
 			#	reward -= max(action[2] - action[3], 0)*0.01
 			#	# penalize spread
 			#	reward -= abs(action[3] - action[2])*0.01
-			elif (action[0] != 0 and action[2] < self.public_pile_sum * 0.4):
+			elif (action[0] != 0 and action[2] < self.public_pile_sum * 0.9):
 				# punish a very low buy price
-				reward -= (action[2] - self.public_pile_sum) * 0.01
-			elif (action[1] != 0 and action[3] > self.public_pile_sum * 1.6):
+				reward -= (self.public_pile_sum - action[2]) * 0.01
+			elif (action[1] != 0 and action[3] > self.public_pile_sum * 1.1):
 				# punish a very high sell price
 				reward -= (action[3] - self.public_pile_sum) * 0.01
 		
