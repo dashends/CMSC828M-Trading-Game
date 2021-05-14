@@ -3,6 +3,7 @@
 Usage Command: 
 	1. python train.py						#This script trains the agent and saves resulting model as SAVE_NAME.zip. It also saves copies of past models to model_checkpoints folder.
 	2. python load_and_play.py				#This script loads models listed in trained_models and evaluates them against EVAgent
+	3. python player_mode.py				#This script loads a models and let you play against the model
 	
 To get best training speed, it is recommanded to run the script in front (bring focus to the window), because some OS (such as Windows 10) 
 may automatically slow down processes that run in the background.
@@ -30,24 +31,28 @@ Done:
 10. extend obs spaces (Amir)
 11. add baseline agent to opponent list
 12. remove bad models from model bank
+13.  add penalty for rediculously high/low price for some margins
+14. custom policy network  https://stable-baselines.readthedocs.io/en/master/guide/custom_policy.html
+	64*64 might be the best https://arxiv.org/abs/1709.06560
+15. plot training results 
+mean rewards vs num of time steps:
+2 player, 10 cards, 4 sequences, 20% EVAgent, 10 updates
+(1) relu vs. tanh, different networks arch
+(2) transaction history length		
+(3) % of EVAgent
+(4) model bank update frequency
+(5) dynamic sampling and evaluation (on and off)
+(6) larger games (more cards) (more players 30 cards)
+(7) MLP policy vs. RNN policy
+
+
 
 
 
 TODO:
-
-3.  add penalty for rediculously high/low price for some margins
-	large spread
-3. custom policy network  https://stable-baselines.readthedocs.io/en/master/guide/custom_policy.html
-	64*64 might be the best https://arxiv.org/abs/1709.06560
-3. change action space to number of contracts to buy
 3. train and observe 
 4. randomization to force exploration. e.g. cost multiplier of contracts. Initial states of the buy/sell offer markets. 
 	Sufficiently diverse training games are necessary to ensure robustness to the wide variety of strategies and situations that arise in games against human opponents.
-
-	
-3. plot training results (mean rewards vs num of time steps) (DQN vs PPO2) (MLP policy vs. RNN policy etc.), quality scores of past selves
-
-	
 5. playing against the agent
 7. for continuous spaces, normalize observation/action space if possible (A good practice is to rescale your actions to lie in [-1, 1])
 
