@@ -6,23 +6,14 @@ import random
 import math
 from queue import PriorityQueue
 from stable_baselines import PPO2
+import policy
+from stable_baselines.common.vec_env import DummyVecEnv
 from stable_baselines.common.policies import FeedForwardPolicy, register_policy
 import tensorflow as tf
 
 INITIAL_ACCOUNT_BALANCE = 10000
 AGENT_INDEX = 0
 NO_ACTION_PENALTY = -5
-
-# Custom MLP policy of three layers of size 128 each
-class MlpPolicy128(FeedForwardPolicy):
-	def __init__(self, *args, **kwargs):
-		super(MlpPolicy128, self).__init__(*args, **kwargs,
-										   net_arch=[dict(pi=[128, 128, 128],
-														  vf=[128, 128, 128])],
-										   feature_extraction="mlp")
-# Register the policy, it will check that the name is not already taken
-register_policy('MlpPolicy128', MlpPolicy128)
-
 
 # Custom MLP policy using relu
 class MlpPolicyReLU(FeedForwardPolicy):
@@ -35,17 +26,6 @@ class MlpPolicyReLU(FeedForwardPolicy):
 # Register the policy, it will check that the name is not already taken
 register_policy('MlpPolicyReLU', MlpPolicyReLU)
 
-# Custom MLP policy using relu
-class MlpPolicyReLU128(FeedForwardPolicy):
-	def __init__(self, *args, **kwargs):
-		super(MlpPolicyReLU128, self).__init__(*args, **kwargs,
-											net_arch=[dict(pi=[128,128],
-														  vf=[128,128])],
-											act_fun=tf.nn.relu,
-											feature_extraction="mlp")
-# Register the policy, it will check that the name is not already taken
-register_policy('MlpPolicyReLU128', MlpPolicyReLU128)
-
 def softmax(arr, axis=None):
 	z = arr - arr.max(axis=axis, keepdims=True)
 	e_z = np.exp(z)
@@ -54,7 +34,6 @@ def softmax(arr, axis=None):
 	
 class TradingGameEnv(gym.Env):
 	"""A trading game environment for OpenAI gym"""
-	metadata = {'render.modes': ['human']}
 
 	"""
 	parameters:
@@ -63,7 +42,8 @@ class TradingGameEnv(gym.Env):
 	def __init__(self, player_count = 2, suit_count = 1, number_of_sub_piles = 4, other_agent_list = [],
 		seq_per_day = 1, random_seq = False, cards_per_suit = 13, player_hand_count = 2, extensive_obs = False,
 		self_play = False, policy_type = 'MlpPolicy', self_copy_freq = 10, model_quality_lr=0.01, 
-		obs_transaction_history_size=1, eval=False, model_bank_size = 1000, n_steps=128):
+		obs_transaction_history_size=1, eval=False, model_bank_size = 1000, n_steps=128, EVAgent_percentage = 0.2,
+		dynamic_eval = True, dummy_vec = False):
 	
 		super(TradingGameEnv, self).__init__()
 		self.eval = eval
@@ -90,6 +70,7 @@ class TradingGameEnv(gym.Env):
 		
 		# variables for self play training
 		if self_play:
+			self.EVAgent_percentage = EVAgent_percentage
 			self.EVAgent = other_agent_list 	# EV Agents are stored here in self-play mode
 			self.model_bank = []	# a bank that holds all past selves
 			self.model_qualities = np.array([], dtype=np.float32)	# represent the quality of the models in the bank.
@@ -100,6 +81,8 @@ class TradingGameEnv(gym.Env):
 			self.model = None
 			self.model_quality_lr = model_quality_lr
 			self.model_bank_size = model_bank_size
+			self.dynamic_eval = dynamic_eval
+			self.dummy_vec = dummy_vec
 
 		if len(self.other_agents) != self.player_count-1:
 			raise Exception("Error: other_agent_list do not conform to the number of players. You may need to add/remove some other agents")
@@ -159,14 +142,17 @@ class TradingGameEnv(gym.Env):
 		self.other_agents = []
 		# there are player_count - 1 opponents
 		for i in range(self.player_count - 1):
-			self.other_agents.append(PPO2(self.policy_type, self))
+			if not self.dummy_vec:
+				self.other_agents.append(PPO2(self.policy_type, self, nminibatches=1))
+			else:
+				self.other_agents.append(PPO2(self.policy_type,  DummyVecEnv([lambda: self]), nminibatches=1))
 
 	# reset self play opponents every game
 	def reset_self_play_opponents(self):
 		# if it's not first game, update opponent model quality after a game (dynamic sampling and evaluation)
-		if self.game_count != 0 and not self.playing_against_EVAgent:
+		if self.dynamic_eval and self.game_count != 0 and not self.playing_against_EVAgent:
 			# check if the agent defeats opponents based upon net worth
-			net_worth = self.balance + self.contract * self.public_pile.sum()
+			net_worth = self.balance + self.contract * self.public_pile_sum
 			#print("net_worth", net_worth)
 			for i in range(len(self.other_agents)):
 				# if the net worth of opponent is less than the agent, reduce the quality score of the opponent
@@ -174,7 +160,10 @@ class TradingGameEnv(gym.Env):
 					# print("win", self.current_opponents_index, i)
 					model_idx = self.current_opponents_index[i]
 					# the amount to reduce = model_quality_lr / (total number of models * probability of choosing this model)
-					self.model_qualities[model_idx] -= self.model_quality_lr/(len(self.model_qualities) * self.model_probabilities[model_idx])
+					if self.model_probabilities[model_idx] != 0:
+						self.model_qualities[model_idx] -= self.model_quality_lr/(len(self.model_qualities) * self.model_probabilities[model_idx])
+					else:
+						self.model_qualities[model_idx] -= 100
 
 					
 		# add the model itself to the bank every self_copy_freq updates
@@ -183,7 +172,7 @@ class TradingGameEnv(gym.Env):
 			#self.print_self_param(key = 'model/pi/b:0')
 
 		# drop bad models if there are too many models
-		if len(self.model_qualities) > 2 * self.model_bank_size:
+		if self.dynamic_eval and len(self.model_qualities) > 2 * self.model_bank_size:
 			smallest_idx = np.argpartition(self.model_qualities, len(self.model_qualities) - self.model_bank_size)[0:len(self.model_qualities) - self.model_bank_size]
 			self.model_qualities = np.delete(self.model_qualities, smallest_idx)
 			for i in sorted(smallest_idx, reverse=True):
@@ -191,20 +180,19 @@ class TradingGameEnv(gym.Env):
 
 			
 		# choose new opponents
-		self.model_probabilities = softmax(self.model_qualities)
 		self.current_opponents_index = []
-		if random.random() < 0.2:
-			# 50% of time, play against EV Agent
+		if random.random() < self.EVAgent_percentage:
+			# EVAgent_percentage% of time, play against EV Agent
 			self.playing_against_EVAgent = True
 		else:
+			self.model_probabilities = softmax(self.model_qualities)
+			self.playing_against_EVAgent = False
 			for i in range(self.player_count-1):
-				# 50% of time, self-play
-				self.playing_against_EVAgent = False
+				# EVAgent_percentage% of time, self-play
 				if random.random() < 0.8:
 					# 80% of time play against immediate past self
 					self.current_opponents_index.append(-1)
 					self.other_agents[i].load_parameters(self.model_bank[-1])
-					self.model_probabilities = softmax(self.model_qualities)
 				else:
 					# 20% of time play against random past self
 					
@@ -255,7 +243,7 @@ class TradingGameEnv(gym.Env):
 
 
 		self.public_pile = suit_list[self.player_count * self.player_hand_count:]
-
+		self.public_pile_sum = self.public_pile.sum()
 
 		self.sell_offer = PriorityQueue()
 		self.buy_offer = PriorityQueue()
@@ -275,17 +263,16 @@ class TradingGameEnv(gym.Env):
 
 			# if it is an opponent agent
 			if i != AGENT_INDEX:
-				obs_i = self._next_observation(i)
-				action_i = self.other_agents[i-1].predict(obs_i)
+				obs_i = self._next_observation(i)				
 				if self.self_play and not self.playing_against_EVAgent:
-					action_i = action_i[0]
+					action_i = self.other_agents[i-1].predict(obs_i)[0]
 				elif self.playing_against_EVAgent:
 					action_i = self.EVAgent[i-1].predict(obs_i)
+				else:
+					action_i = self.other_agents[i-1].predict(obs_i)
 				self.transaction_history[(self.day-1)*self.seq_per_day + self.sequence_counter-1][i] = action_i
 				'''
-				### TODO:
-					(1)Infinite Transaction history, pass last X elements to observation space.
-					(2)Create a Queue for transaction history
+					Infinite Transaction history, pass last X elements to observation space.
 				'''
 				'''
 				actions of agent i takes place here
@@ -320,7 +307,7 @@ class TradingGameEnv(gym.Env):
 		'''
 
 		# give reward based on ground truth for last action only
-		reward = (self.public_pile.sum() * (self.contract[AGENT_INDEX]-self.contract_prev) +
+		reward = (self.public_pile_sum * (self.contract[AGENT_INDEX]-self.contract_prev) +
 							(self.balance[AGENT_INDEX]-self.balance_prev))
 
 		if not self.eval:
@@ -331,19 +318,19 @@ class TradingGameEnv(gym.Env):
 			#	reward -= max(action[2] - action[3], 0)*0.01
 			#	# penalize spread
 			#	reward -= abs(action[3] - action[2])*0.01
-			#elif (action[0] != 0 and action[1] == 0):
-			#	# only buy
-			#	reward -= abs(action[2] - self.public_pile.sum()) * 0.01
-			#else:
-			#	# only sell
-			#	reward -= abs(action[3] - self.public_pile.sum()) * 0.01
+			elif (action[0] != 0 and action[2] < self.public_pile_sum * 0.4):
+				# punish a very low buy price
+				reward -= (action[2] - self.public_pile_sum) * 0.01
+			elif (action[1] != 0 and action[3] > self.public_pile_sum * 1.6):
+				# punish a very high sell price
+				reward -= (action[3] - self.public_pile_sum) * 0.01
 		
 		
 
 		"""
 		# if it's the last day, give final reward
 		if self.day == self.number_of_sub_piles-1 and self.sequence_counter == self.seq_per_day:
-			final_reward = ((self.public_pile.sum() * self.contract[AGENT_INDEX] +
+			final_reward = ((self.public_pile_sum * self.contract[AGENT_INDEX] +
 							self.balance[AGENT_INDEX] - INITIAL_ACCOUNT_BALANCE)*
 							(self.day + 1))
 			reward += final_reward
@@ -354,7 +341,11 @@ class TradingGameEnv(gym.Env):
 		# if it is the last sequence of that day, go to next day
 		if self.sequence_counter == self.seq_per_day:
 			self.day += 1
-
+			
+			# generate new turn sequence for the next day
+			if self.random_seq:
+				np.random.shuffle(self.turn_sequence)
+				
 			#reset sequence number
 			self.sequence_counter = 1
 
@@ -379,7 +370,6 @@ class TradingGameEnv(gym.Env):
 
 	def _next_observation(self, agent_index = AGENT_INDEX):
 		# get the observation for the agent at the index
-		## TODO: Populate observation array.
 		obs = np.zeros(self.obs_element_count, dtype=np.int)
 
 		# public pile
@@ -496,7 +486,7 @@ class TradingGameEnv(gym.Env):
 
 		if self.day == self.number_of_sub_piles:
 			# print net worth at the end of game
-			print("total net worth: ", self.balance + self.contract * self.public_pile.sum())
+			print("total net worth: ", self.balance + self.contract * self.public_pile_sum)
 		else:
 			print("turn sequence: ", self.turn_sequence)
 

@@ -48,3 +48,20 @@ class EVAgent():
 		#print("EV Agent action", self.val)
 
 		return self.val
+
+class PlayerAgent():
+	'''
+	Agent that asks for human player to enter an action
+	'''
+	def __init__(self):
+		...
+
+	def predict(self, obs):
+
+		print("Now it's your turn")
+		print("Your observation: ", obs)
+		print("Please enter your action. format: int int int int e.g. 1 1 33 33")
+		
+		action = [int(element) for element in input().split()]
+		
+		return action
