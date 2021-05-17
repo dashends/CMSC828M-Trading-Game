@@ -1,5 +1,5 @@
 """
-This script trains the agent and saves resulting model as SAVE_NAME.zip. It also saves copies of past models to model_checkpoints folder.
+This script runs the experiments mentioned in the paper
 """
 
 import TradingGameEnv
@@ -118,13 +118,8 @@ def run_exp_dummy_vec():
 			random_seq = True, self_play = SELF_PLAY, policy_type = POLICY_TYPE, self_copy_freq = SELF_COPY_FREQ,
 			obs_transaction_history_size=TRANSACTION_HISTORY_SIZE, n_steps=N_STEPS, 
 			EVAgent_percentage= EVAgent_percentage, dynamic_eval = DYNAMIC_EVAL, dummy_vec = True)
-	print(env)
-	print("obs space", env.observation_space)
-	print("action space", env.action_space.sample())
+
 	env = DummyVecEnv([lambda: env])
-	print(env)
-	print("obs space", env.observation_space)
-	print("action space", env.action_space.sample())
 
 
 	model = PPO2(POLICY_TYPE, env, nminibatches=1, **model_params) 
@@ -164,7 +159,7 @@ if __name__ == '__main__':
 	num_cpu = 1  # Number of processes to use. It is set to 8 to get more out of 8 threads
 	TRAINING_TIME_STEPS = (int)(1e6)
 	TRANSACTION_HISTORY_SIZE =4 # one sequence of transaction. Which is 1*4*3 elements in a 3-player game
-	SAVE_FREQ = int(1e5/num_cpu)
+	SAVE_FREQ = int(1e4/num_cpu)
 	
 	HAND_COUNT = (int) ((CARDS_PER_SUIT)/2*SUIT_COUNT/NUM_PLAYERS)
 
@@ -180,7 +175,7 @@ if __name__ == '__main__':
 
 	# varying params
 	
-	"""
+	
 	# plot net arch
 	num_layers = [2, 3, 4]
 	num_neurons = [64, 128]
@@ -192,9 +187,9 @@ if __name__ == '__main__':
 				SAVE_PATH= './model_checkpoints/plot_net_arch/' + POLICY_TYPE +'/'
 				print_params()
 				run_exp()
-	"""
+	POLICY_TYPE = 'MlpPolicyRelu64_3'
 	
-	"""
+	
 	# % of EVAgent
 	percent = [0, 10, 20, 30, 40, 60, 80, 100]
 	for p in percent:
@@ -207,9 +202,9 @@ if __name__ == '__main__':
 			
 		print_params()
 		run_exp()
-	"""
+	EVAgent_percentage = 0.2
 	
-	"""
+	
 	# plot different transaction history length
 	length = [0, 1, 2, 4, 6, 8]
 	for l in length:
@@ -218,9 +213,9 @@ if __name__ == '__main__':
 			
 		print_params()
 		run_exp()
-	"""
+	TRANSACTION_HISTORY_SIZE = 4
 	
-	"""
+	
 	# plot model bank update frequency
 	freq = [1, 5, 10, 100, 1000]
 	for f in freq:
@@ -229,9 +224,9 @@ if __name__ == '__main__':
 			
 		print_params()
 		run_exp()
-	"""
+	SELF_COPY_FREQ = 10
 	
-	"""
+	
 	# dynamic sampling and evaluation (on and off)
 	dynamic = [False]
 	for d in dynamic:
@@ -240,18 +235,41 @@ if __name__ == '__main__':
 			
 		print_params()
 		run_exp()
-	"""
+	DYNAMIC_EVAL = True
 	
-	"""
+	
+	
+	
+	
+	
+	# hyper parameter tuning
+	SAVE_PATH= './model_checkpoints/plot_tuning/False/'
+	
+	model_params = {'n_steps': int(128/num_cpu)}
+	N_STEPS = model_params['n_steps']
+
+	# add 1 baseline agent
+	agents = []
+	agents.append(baseline_agents.EVAgent(agent_idx = 1, num_players = NUM_PLAYERS, betting_margin = BETTING_MARGIN, cards_per_suit = CARDS_PER_SUIT, player_hand_count = HAND_COUNT, public_cards_count = PUBLIC_CARDS_COUNT))
+
+	print_params()
+	run_exp()
+	
+	model_params = {'n_steps': int(1400/num_cpu), 'gamma': 0.9378697782327615, 'learning_rate': 0.0002743310803336785, 'ent_coef': 2.2312682753757416e-05, 'cliprange': 0.12718794371596698, 'noptepochs': 32, 'lam': 0.894837193141085}
+	N_STEPS = model_params['n_steps']
+	# add 1 baseline agent
+	agents = []
+	agents.append(baseline_agents.EVAgent(agent_idx = 1, num_players = NUM_PLAYERS, betting_margin = BETTING_MARGIN, cards_per_suit = CARDS_PER_SUIT, player_hand_count = HAND_COUNT, public_cards_count = PUBLIC_CARDS_COUNT))
+
+	
+
+
+	
 	# more cards
-	# cards = [20, 40, 60,  80 , 100]	# 150, 200
-	cards = [40]
+	cards = [10, 20]	# , 40, 60,  80 , 100, 150, 200
 	for c in cards:
-		POLICY_TYPE = 'MlpPolicyReLU10000'
-		SAVE_PATH= './model_checkpoints/plot_cards/MlpPolicyReLU10000' + str(c) +'/'
-		#POLICY_TYPE = 'MlpPolicyRelu512_3'
-		#SAVE_PATH= './model_checkpoints/plot_cards/' + str(c) +'/'
-		
+		POLICY_TYPE = 'MlpPolicyRelu64_3'
+		SAVE_PATH= './model_checkpoints/plot_cards/' + str(c) +'/'
 		CARDS_PER_SUIT = c
 		BETTING_MARGIN = CARDS_PER_SUIT*CARDS_PER_SUIT/100
 		HAND_COUNT = (int) ((CARDS_PER_SUIT)/2*SUIT_COUNT/NUM_PLAYERS)
@@ -265,66 +283,19 @@ if __name__ == '__main__':
 
 		print_params()
 		run_exp()
-	"""
+	
+
 
 	
-	# more cards
-	# cards = [20, 40, 60,  80 , 100]	# 150, 200
-	cards = [10, 20, 40, 60]	# 80 , 100, 150, 200
-	for c in cards:
-		POLICY_TYPE = 'MlpLstmPolicy'
-		SAVE_PATH= './model_checkpoints/plot_cards/MlpLstmPolicy' + str(c) +'/'
-		#POLICY_TYPE = 'MlpPolicyRelu512_3'
-		#SAVE_PATH= './model_checkpoints/plot_cards/' + str(c) +'/'
-		
-		CARDS_PER_SUIT = c
-		BETTING_MARGIN = CARDS_PER_SUIT*CARDS_PER_SUIT/100
-		HAND_COUNT = (int) ((CARDS_PER_SUIT)/2*SUIT_COUNT/NUM_PLAYERS)
-
-		PUBLIC_CARDS_COUNT = CARDS_PER_SUIT*SUIT_COUNT - HAND_COUNT*NUM_PLAYERS
-
-		
-		# add 1 baseline agent
-		agents = []
-		agents.append(baseline_agents.EVAgent(agent_idx = 1, num_players = NUM_PLAYERS, betting_margin = BETTING_MARGIN, cards_per_suit = CARDS_PER_SUIT, player_hand_count = HAND_COUNT, public_cards_count = PUBLIC_CARDS_COUNT))
-
-		print_params()
-		# run_exp()
-		run_exp_dummy_vec()
-	
-	"""
-	for c in cards:
-		POLICY_TYPE = 'LstmPolicy'
-		SAVE_PATH= './model_checkpoints/plot_cards/LstmPolicy' + str(c) +'/'
-		#POLICY_TYPE = 'MlpPolicyRelu512_3'
-		#SAVE_PATH= './model_checkpoints/plot_cards/' + str(c) +'/'
-		
-		CARDS_PER_SUIT = c
-		BETTING_MARGIN = CARDS_PER_SUIT*CARDS_PER_SUIT/100
-		HAND_COUNT = (int) ((CARDS_PER_SUIT)/2*SUIT_COUNT/NUM_PLAYERS)
-
-		PUBLIC_CARDS_COUNT = CARDS_PER_SUIT*SUIT_COUNT - HAND_COUNT*NUM_PLAYERS
-
-		
-		# add 1 baseline agent
-		agents = []
-		agents.append(baseline_agents.EVAgent(agent_idx = 1, num_players = NUM_PLAYERS, betting_margin = BETTING_MARGIN, cards_per_suit = CARDS_PER_SUIT, player_hand_count = HAND_COUNT, public_cards_count = PUBLIC_CARDS_COUNT))
-
-		print_params()
-		# run_exp()
-		run_exp_dummy_vec()
-	"""
-
-	"""
 	# more players
-	players = [2, 3, 4, 5, 6, 10] #6, 10
+	players = [2, 3] #, 4, 5, 6, 10
 	for p in players:
-		POLICY_TYPE = 'MlpPolicyRelu512_3'
+		POLICY_TYPE = 'MlpPolicyRelu64_3'
 		SAVE_PATH= './model_checkpoints/plot_players/' + str(p) +'/'
 		NUM_PLAYERS = p
-		CARDS_PER_SUIT = 30
+		CARDS_PER_SUIT = int(p*2+6)
 		BETTING_MARGIN = CARDS_PER_SUIT*CARDS_PER_SUIT/100
-		HAND_COUNT = (int) ((CARDS_PER_SUIT)/2*SUIT_COUNT/NUM_PLAYERS)
+		HAND_COUNT = 2
 
 		PUBLIC_CARDS_COUNT = CARDS_PER_SUIT*SUIT_COUNT - HAND_COUNT*NUM_PLAYERS
 
@@ -336,4 +307,4 @@ if __name__ == '__main__':
 
 		print_params()
 		run_exp()
-	"""
+	

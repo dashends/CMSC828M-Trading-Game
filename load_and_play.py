@@ -49,7 +49,8 @@ trained_models = ["model_checkpoints/rl_model_400000_steps", "model_checkpoints/
 	"model_checkpoints/rl_model_7600000_steps", "model_checkpoints/rl_model_8000000_steps",
 	"model_checkpoints/rl_model_8400000_steps","model_checkpoints/rl_model_8800000_steps",
 	"model_checkpoints/rl_model_9200000_steps", "model_checkpoints/rl_model_9600000_steps", "model_final"]
-#trained_models = [join("model_checkpoints/", f) for f in listdir("model_checkpoints/") if isfile(join("model_checkpoints/", f))]
+folder = "model_checkpoints/plot_cards/MlpPolicyRelu512_3PenaltyTenPercent40/"
+trained_models = [join(folder, f) for f in listdir(folder) if isfile(join(folder, f))]
 	
 for model_path in trained_models:
 	model = PPO2.load(model_path)
@@ -872,6 +873,36 @@ model_checkpoints/rl_model_8800000_steps  mean_reward:  0.6406396484375  std_rew
 model_checkpoints/rl_model_9200000_steps  mean_reward:  0.64665625  std_reward:  4.570854199566338
 model_checkpoints/rl_model_9600000_steps  mean_reward:  0.4194091796875  std_reward:  3.3663532623667685
 model_final  							  mean_reward:  0.6919052734375  std_reward:  4.766991596116788
+
+Self-play with dynamic sampling and evaluation  (4 sequence of transaction history) 20% EV Agent, reward not modified
+	MLPPolicy ReLU 128*128
+	{'n_steps': int(1403/num_cpu), 'gamma': 0.9378697782327615, 'learning_rate': 0.0002743310803336785, 'ent_coef': 2.2312682753757416e-05, 'cliprange': 0.12718794371596698, 'noptepochs': 32, 'lam': 0.894837193141085}
+model_checkpoints/rl_model_400000_steps  mean_reward:  0.5718818359375  std_reward:  5.8560904617767315
+model_checkpoints/rl_model_800000_steps  mean_reward:  1.83872265625  std_reward:  6.2515127545552875
+model_checkpoints/rl_model_1200000_steps  mean_reward:  1.3548095703125  std_reward:  5.739620492512579
+model_checkpoints/rl_model_1600000_steps  mean_reward:  1.5478505859375  std_reward:  5.613324916597995
+model_checkpoints/rl_model_2000000_steps  mean_reward:  1.97940625  std_reward:  4.785566385510387
+model_checkpoints/rl_model_2400000_steps  mean_reward:  1.8315634765625  std_reward:  4.89943417722855
+model_checkpoints/rl_model_2800000_steps  mean_reward:  1.8442529296875  std_reward:  4.633993194942125
+model_checkpoints/rl_model_3200000_steps  mean_reward:  1.6510234375  std_reward:  5.575858688434281
+model_checkpoints/rl_model_3600000_steps  mean_reward:  1.765033203125  std_reward:  5.771294291560679
+model_checkpoints/rl_model_4000000_steps  mean_reward:  1.88561328125  std_reward:  5.407328174714333
+model_checkpoints/rl_model_4400000_steps  mean_reward:  1.8410849609375  std_reward:  4.976943397838481
+model_checkpoints/rl_model_4800000_steps  mean_reward:  2.0762724609375  std_reward:  5.558544039314344
+model_checkpoints/rl_model_5200000_steps  mean_reward:  2.319388671875  std_reward:  6.296608640207152
+model_checkpoints/rl_model_5600000_steps  mean_reward:  2.0355791015625  std_reward:  5.778865950113329
+model_checkpoints/rl_model_6000000_steps  mean_reward:  2.04968359375  std_reward:  5.783655239820702
+model_checkpoints/rl_model_6400000_steps  mean_reward:  1.8695205078125  std_reward:  5.356542747952884
+model_checkpoints/rl_model_6800000_steps  mean_reward:  2.01720703125  std_reward:  5.4863145078289755
+model_checkpoints/rl_model_7200000_steps  mean_reward:  2.01189453125  std_reward:  6.256817867607696
+model_checkpoints/rl_model_7600000_steps  mean_reward:  1.8522470703125  std_reward:  6.657549996354761
+model_checkpoints/rl_model_8000000_steps  mean_reward:  2.300419921875  std_reward:  5.66191828142596
+model_checkpoints/rl_model_8400000_steps  mean_reward:  2.23952734375  std_reward:  5.775685231219016
+model_checkpoints/rl_model_8800000_steps  mean_reward:  2.1883037109375  std_reward:  5.292466548699631
+model_checkpoints/rl_model_9200000_steps  mean_reward:  2.0546923828125  std_reward:  6.122247849811916
+model_checkpoints/rl_model_9600000_steps  mean_reward:  2.2276845703125  std_reward:  5.401919436066133
+model_final  							  mean_reward:  1.7544677734375  std_reward:  5.714259236636084
+
 """
 
 # Playing test rounds

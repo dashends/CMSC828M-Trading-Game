@@ -1,14 +1,28 @@
 # CMSC828M Trading Game
 
 Usage Command: 
-	1. python train.py						#This script trains the agent and saves resulting model as SAVE_NAME.zip. It also saves copies of past models to model_checkpoints folder.
-	2. python load_and_play.py				#This script loads models listed in trained_models and evaluates them against EVAgent
-	3. python player_mode.py				#This script loads a models and let you play against the model
+	1. python player_mode.py				#This script loads a models and let you play against the model
+	2. python train.py						#This script trains the agent and saves resulting model as SAVE_NAME.zip. It also saves copies of past models to model_checkpoints folder.
+	3. python load_and_play.py				#This script loads models listed in trained_models and evaluates them against EVAgent
+	4. python experiment.py					#This script runs the experiments mentioned in the paper
+	5. python hyperparam_tuning/tuning		#This script runs hyper-parameter tuning using optuna
 	
-To get best training speed, it is recommanded to run the script in front (bring focus to the window), because some OS (such as Windows 10) 
-may automatically slow down processes that run in the background.
 
-Done:
+To get best training speed, it is recommanded to run the script in front (bring focus to the window), because some OS (such as Windows 10) may automatically slow down processes that run in the background.
+
+
+
+
+package versions:
+Python 				 3.6.13
+numpy                1.19.5
+gym                  0.18.0
+stable-baselines     2.10.1
+tensorflow           1.15.0
+(warning: stable baseline only works with tensorflow 1.x)
+
+
+What is done so far:
 1. Implement the game environment
 	a. init()
 	b. reset()
@@ -32,67 +46,23 @@ Done:
 11. add baseline agent to opponent list
 12. remove bad models from model bank
 13.  add penalty for rediculously high/low price for some margins
-14. custom policy network  https://stable-baselines.readthedocs.io/en/master/guide/custom_policy.html
-	64*64 might be the best https://arxiv.org/abs/1709.06560
+14. custom policy network
 15. plot training results 
-mean rewards vs num of time steps:
-2 player, 10 cards, 4 sequences, 20% EVAgent, 10 updates
-(1) relu vs. tanh, different networks arch
-(2) transaction history length		
-(3) % of EVAgent
-(4) model bank update frequency
-(5) dynamic sampling and evaluation (on and off)
-(6) larger games (more cards) (more players 30 cards)
-(7) MLP policy vs. RNN policy
+	mean rewards vs num of time steps:
+	2 player, 10 cards, 4 sequences, 20% EVAgent, 10 updates
+	(1) relu vs. tanh, different networks arch
+	(2) transaction history length		
+	(3) % of EVAgent
+	(4) model bank update frequency
+	(5) dynamic sampling and evaluation (on and off)
+	(6) larger games (more cards) (more players 30 cards)
+	(7) MLP policy vs. RNN policy
+
+
+
+Future directions:
+1. force exploration
 
 
 
 
-
-TODO:
-3. train and observe 
-4. randomization to force exploration. e.g. cost multiplier of contracts. Initial states of the buy/sell offer markets. 
-	Sufficiently diverse training games are necessary to ensure robustness to the wide variety of strategies and situations that arise in games against human opponents.
-5. playing against the agent
-7. for continuous spaces, normalize observation/action space if possible (A good practice is to rescale your actions to lie in [-1, 1])
-
-
-
-
-Action: offer sell, offer buy.  With an amount + a price
-
-observation_space: public pile + own hand + money+ transection history + contract each player has + sequence of players
-none of the Stable Baselines can handle Dict/Tuple spaces. Concatenate them into Box space.
-
-
-reward: 
-1. expected profit * timestep + panelty if no action
-=  (expected value of public pile * amount of contract + cureent balance – initial balance) * timestep + panelty if no action
-times timestep to incentive late game profits more than in the beginning
-2. give reward based on ground truth. no need to times timestep because profit is determined for each action. No need to incentive late game profits more than in the beginning
-
-Start with 1 suit, 1 contract, 1 sequence per round, 2 agents
-
-
-Training: play against baseline model; self-play 
-
-Training against baseline models is easier to start with. But the performance might not be very good
-
-Self-play: 
-1. To avoid “strategy collapse”, the agent trains 80% of its games against itself and the other 20% against its past selves.
-2. To force exploration in strategy space, during training (and only during training) we may randomize the properties of the units.
-
-
-
-User testing: we can play against the agent (see https://github.com/openai/gym/blob/master/gym/utils/play.py#L26
-
-
-
-
-package versions:
-Python 3.6.13
-numpy                1.19.5
-gym                  0.18.0
-stable-baselines     2.10.1
-tensorflow           1.15.0
-(warning: stable baseline works with tensorflow 1.x)
