@@ -1,11 +1,16 @@
 # CMSC828M Trading Game
 
 Usage Command: 
+
 	1. python player_mode.py				#This script loads a models and let you play against the model
-	2. python train.py						#This script trains the agent and saves resulting model as SAVE_NAME.zip. It also saves copies of past models to model_checkpoints folder.
-	3. python load_and_play.py				#This script loads models listed in trained_models and evaluates them against EVAgent
-	4. python experiment.py					#This script runs the experiments mentioned in the paper
-	5. python hyperparam_tuning/tuning		#This script runs hyper-parameter tuning using optuna
+
+	3. python train.py					#This script trains the agent and saves resulting model as SAVE_NAME.zip. It also saves copies of past models to model_checkpoints folder.
+
+	5. python load_and_play.py				#This script loads models listed in trained_models and evaluates them against EVAgent
+
+	7. python experiment.py					#This script runs the experiments mentioned in the paper
+
+	9. python hyperparam_tuning/tuning			#This script runs hyper-parameter tuning using optuna
 	
 
 To get best training speed, it is recommanded to run the script in front (bring focus to the window), because some OS (such as Windows 10) may automatically slow down processes that run in the background.
@@ -14,12 +19,19 @@ To get best training speed, it is recommanded to run the script in front (bring 
 
 
 package versions:
-Python 				 3.6.13
-numpy                1.19.5
-gym                  0.18.0
-stable-baselines     2.10.1
-tensorflow           1.15.0
-(warning: stable baseline only works with tensorflow 1.x)
+
+	Python 		     3.6.13
+
+	numpy                1.19.5
+
+	gym                  0.18.0
+
+	stable-baselines     2.10.1
+
+	tensorflow           1.15.0
+
+	(warning: stable baseline only works with tensorflow 1.x)
+
 
 
 What is done so far:
