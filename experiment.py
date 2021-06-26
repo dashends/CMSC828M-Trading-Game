@@ -176,135 +176,150 @@ if __name__ == '__main__':
 	# varying params
 	
 	
-	# plot net arch
-	num_layers = [2, 3, 4]
-	num_neurons = [64, 128]
-	acts = ["Relu", "Tanh"]
-	for num_layer in num_layers:
-		for num_neuron in num_neurons:
-			for act in acts:
-				POLICY_TYPE = 'MlpPolicy'+str(act)+str(num_neuron)+"_"+str(num_layer) # e.g. MlpPolicyRelu64_2
-				SAVE_PATH= './model_checkpoints/plot_net_arch/' + POLICY_TYPE +'/'
-				print_params()
-				run_exp()
-	POLICY_TYPE = 'MlpPolicyRelu64_3'
+	# # plot net arch
+	# num_layers = [2, 3, 4]
+	# num_neurons = [64, 128]
+	# acts = ["Relu", "Tanh"]
+	# for num_layer in num_layers:
+	# 	for num_neuron in num_neurons:
+	# 		for act in acts:
+	# 			POLICY_TYPE = 'MlpPolicy'+str(act)+str(num_neuron)+"_"+str(num_layer) # e.g. MlpPolicyRelu64_2
+	# 			SAVE_PATH= './model_checkpoints/plot_net_arch/' + POLICY_TYPE +'/'
+	# 			print_params()
+	# 			run_exp()
+	# POLICY_TYPE = 'MlpPolicyRelu64_3'
 	
 	
-	# % of EVAgent
-	percent = [0, 10, 20, 30, 40, 60, 80, 100]
-	for p in percent:
-		EVAgent_percentage = p/100
-		SAVE_PATH= './model_checkpoints/plot_EVAgent_percent/' + str(p) +'/'
+	# # % of EVAgent
+	# percent = [0, 10, 20, 30, 40, 60, 80, 100]
+	# for p in percent:
+	# 	EVAgent_percentage = p/100
+	# 	SAVE_PATH= './model_checkpoints/plot_EVAgent_percent/' + str(p) +'/'
 		
-		if p == 100:
-			# no self play
-			SELF_PLAY = False
+	# 	if p == 100:
+	# 		# no self play
+	# 		SELF_PLAY = False
 			
-		print_params()
-		run_exp()
-	EVAgent_percentage = 0.2
+	# 	print_params()
+	# 	run_exp()
+	# EVAgent_percentage = 0.2
 	
 	
-	# plot different transaction history length
-	length = [0, 1, 2, 4, 6, 8]
-	for l in length:
-		TRANSACTION_HISTORY_SIZE = l
-		SAVE_PATH= './model_checkpoints/plot_trans_hist_size/' + str(l) +'/'
+	# # plot different transaction history length
+	# length = [0, 1, 2, 4, 6, 8]
+	# for l in length:
+	# 	TRANSACTION_HISTORY_SIZE = l
+	# 	SAVE_PATH= './model_checkpoints/plot_trans_hist_size/' + str(l) +'/'
 			
-		print_params()
-		run_exp()
-	TRANSACTION_HISTORY_SIZE = 4
+	# 	print_params()
+	# 	run_exp()
+	# TRANSACTION_HISTORY_SIZE = 4
 	
 	
-	# plot model bank update frequency
-	freq = [1, 5, 10, 100, 1000]
-	for f in freq:
-		SELF_COPY_FREQ = f
-		SAVE_PATH= './model_checkpoints/plot_model_bank_update_freq/' + str(f) +'/'
+	# # plot model bank update frequency
+	# freq = [1, 5, 10, 100, 1000]
+	# for f in freq:
+	# 	SELF_COPY_FREQ = f
+	# 	SAVE_PATH= './model_checkpoints/plot_model_bank_update_freq/' + str(f) +'/'
 			
-		print_params()
-		run_exp()
-	SELF_COPY_FREQ = 10
+	# 	print_params()
+	# 	run_exp()
+	# SELF_COPY_FREQ = 10
 	
 	
-	# dynamic sampling and evaluation (on and off)
-	dynamic = [False]
-	for d in dynamic:
-		DYNAMIC_EVAL = d
-		SAVE_PATH= './model_checkpoints/plot_dynamic_eval/' + str(d) +'/'
+	# # dynamic sampling and evaluation (on and off)
+	# dynamic = [False]
+	# for d in dynamic:
+	# 	DYNAMIC_EVAL = d
+	# 	SAVE_PATH= './model_checkpoints/plot_dynamic_eval/' + str(d) +'/'
 			
-		print_params()
-		run_exp()
-	DYNAMIC_EVAL = True
+	# 	print_params()
+	# 	run_exp()
+	# DYNAMIC_EVAL = True
 	
 	
 	
 	
 	
 	
-	# hyper parameter tuning
-	SAVE_PATH= './model_checkpoints/plot_tuning/False/'
+	# # hyper parameter tuning
+	# SAVE_PATH= './model_checkpoints/plot_tuning/False/'
 	
-	model_params = {'n_steps': int(128/num_cpu)}
+	# model_params = {'n_steps': int(128/num_cpu)}
+	# N_STEPS = model_params['n_steps']
+
+	# # add 1 baseline agent
+	# agents = []
+	# agents.append(baseline_agents.EVAgent(agent_idx = 1, num_players = NUM_PLAYERS, betting_margin = BETTING_MARGIN, cards_per_suit = CARDS_PER_SUIT, player_hand_count = HAND_COUNT, public_cards_count = PUBLIC_CARDS_COUNT))
+
+	# print_params()
+	# run_exp()
+	
+	# model_params = {'n_steps': int(1400/num_cpu), 'gamma': 0.9378697782327615, 'learning_rate': 0.0002743310803336785, 'ent_coef': 2.2312682753757416e-05, 'cliprange': 0.12718794371596698, 'noptepochs': 32, 'lam': 0.894837193141085}
+	# N_STEPS = model_params['n_steps']
+	# # add 1 baseline agent
+	# agents = []
+	# agents.append(baseline_agents.EVAgent(agent_idx = 1, num_players = NUM_PLAYERS, betting_margin = BETTING_MARGIN, cards_per_suit = CARDS_PER_SUIT, player_hand_count = HAND_COUNT, public_cards_count = PUBLIC_CARDS_COUNT))
+
+	
+
+
+	
+	# # more cards
+	# cards = [10, 20]	# , 40, 60,  80 , 100, 150, 200
+	# for c in cards:
+	# 	POLICY_TYPE = 'MlpPolicyRelu64_3'
+	# 	SAVE_PATH= './model_checkpoints/plot_cards/' + str(c) +'/'
+	# 	CARDS_PER_SUIT = c
+	# 	BETTING_MARGIN = CARDS_PER_SUIT*CARDS_PER_SUIT/100
+	# 	HAND_COUNT = (int) ((CARDS_PER_SUIT)/2*SUIT_COUNT/NUM_PLAYERS)
+
+	# 	PUBLIC_CARDS_COUNT = CARDS_PER_SUIT*SUIT_COUNT - HAND_COUNT*NUM_PLAYERS
+
+		
+	# 	# add 1 baseline agent
+	# 	agents = []
+	# 	agents.append(baseline_agents.EVAgent(agent_idx = 1, num_players = NUM_PLAYERS, betting_margin = BETTING_MARGIN, cards_per_suit = CARDS_PER_SUIT, player_hand_count = HAND_COUNT, public_cards_count = PUBLIC_CARDS_COUNT))
+
+	# 	print_params()
+	# 	run_exp()
+	
+
+
+	
+	# # more players
+	# players = [2, 3] #, 4, 5, 6, 10
+	# for p in players:
+	# 	POLICY_TYPE = 'MlpPolicyRelu64_3'
+	# 	SAVE_PATH= './model_checkpoints/plot_players/' + str(p) +'/'
+	# 	NUM_PLAYERS = p
+	# 	CARDS_PER_SUIT = int(p*2+6)
+	# 	BETTING_MARGIN = CARDS_PER_SUIT*CARDS_PER_SUIT/100
+	# 	HAND_COUNT = 2
+
+	# 	PUBLIC_CARDS_COUNT = CARDS_PER_SUIT*SUIT_COUNT - HAND_COUNT*NUM_PLAYERS
+
+		
+	# 	# add baseline agents
+	# 	agents = []
+	# 	for i in range(p-1):
+	# 		agents.append(baseline_agents.EVAgent(agent_idx = i+1, num_players = NUM_PLAYERS, betting_margin = BETTING_MARGIN, cards_per_suit = CARDS_PER_SUIT, player_hand_count = HAND_COUNT, public_cards_count = PUBLIC_CARDS_COUNT))
+
+	# 	print_params()
+	# 	run_exp()
+	
+
+	# baseline neural agent (default parameters and exclude our techniques)
+	policy_type = 'MlpPolicy'
+	SELF_COPY_FREQ = 10 # copy the agent itself to past selves bank every 10 policy updates
+	SELF_PLAY = True
+	DYNAMIC_EVAL = False
+	EVAgent_percentage = 0
+	num_cpu = 1  # Number of processes to use. It is set to 8 to get more out of 8 threads
+	TRAINING_TIME_STEPS = (int)(1e6)
+	TRANSACTION_HISTORY_SIZE = 0 # one sequence of transaction. Which is 1*4*3 elements in a 3-player game
+	SAVE_FREQ = int(1e4/num_cpu)
+	model_params = {'n_steps': 128, 'gamma': 0.99, 'learning_rate': 0.00025, 'ent_coef': 0.01, 'cliprange': 0.2, 'noptepochs': 4, 'lam': 0.95}
 	N_STEPS = model_params['n_steps']
-
-	# add 1 baseline agent
-	agents = []
-	agents.append(baseline_agents.EVAgent(agent_idx = 1, num_players = NUM_PLAYERS, betting_margin = BETTING_MARGIN, cards_per_suit = CARDS_PER_SUIT, player_hand_count = HAND_COUNT, public_cards_count = PUBLIC_CARDS_COUNT))
-
-	print_params()
+	SAVE_PATH= './model_checkpoints/plot_baseline_agent/default/'
 	run_exp()
-	
-	model_params = {'n_steps': int(1400/num_cpu), 'gamma': 0.9378697782327615, 'learning_rate': 0.0002743310803336785, 'ent_coef': 2.2312682753757416e-05, 'cliprange': 0.12718794371596698, 'noptepochs': 32, 'lam': 0.894837193141085}
-	N_STEPS = model_params['n_steps']
-	# add 1 baseline agent
-	agents = []
-	agents.append(baseline_agents.EVAgent(agent_idx = 1, num_players = NUM_PLAYERS, betting_margin = BETTING_MARGIN, cards_per_suit = CARDS_PER_SUIT, player_hand_count = HAND_COUNT, public_cards_count = PUBLIC_CARDS_COUNT))
-
-	
-
-
-	
-	# more cards
-	cards = [10, 20]	# , 40, 60,  80 , 100, 150, 200
-	for c in cards:
-		POLICY_TYPE = 'MlpPolicyRelu64_3'
-		SAVE_PATH= './model_checkpoints/plot_cards/' + str(c) +'/'
-		CARDS_PER_SUIT = c
-		BETTING_MARGIN = CARDS_PER_SUIT*CARDS_PER_SUIT/100
-		HAND_COUNT = (int) ((CARDS_PER_SUIT)/2*SUIT_COUNT/NUM_PLAYERS)
-
-		PUBLIC_CARDS_COUNT = CARDS_PER_SUIT*SUIT_COUNT - HAND_COUNT*NUM_PLAYERS
-
-		
-		# add 1 baseline agent
-		agents = []
-		agents.append(baseline_agents.EVAgent(agent_idx = 1, num_players = NUM_PLAYERS, betting_margin = BETTING_MARGIN, cards_per_suit = CARDS_PER_SUIT, player_hand_count = HAND_COUNT, public_cards_count = PUBLIC_CARDS_COUNT))
-
-		print_params()
-		run_exp()
-	
-
-
-	
-	# more players
-	players = [2, 3] #, 4, 5, 6, 10
-	for p in players:
-		POLICY_TYPE = 'MlpPolicyRelu64_3'
-		SAVE_PATH= './model_checkpoints/plot_players/' + str(p) +'/'
-		NUM_PLAYERS = p
-		CARDS_PER_SUIT = int(p*2+6)
-		BETTING_MARGIN = CARDS_PER_SUIT*CARDS_PER_SUIT/100
-		HAND_COUNT = 2
-
-		PUBLIC_CARDS_COUNT = CARDS_PER_SUIT*SUIT_COUNT - HAND_COUNT*NUM_PLAYERS
-
-		
-		# add baseline agents
-		agents = []
-		for i in range(p-1):
-			agents.append(baseline_agents.EVAgent(agent_idx = i+1, num_players = NUM_PLAYERS, betting_margin = BETTING_MARGIN, cards_per_suit = CARDS_PER_SUIT, player_hand_count = HAND_COUNT, public_cards_count = PUBLIC_CARDS_COUNT))
-
-		print_params()
-		run_exp()
-	
